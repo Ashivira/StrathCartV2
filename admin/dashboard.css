@@ -1,0 +1,342 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  background: #0D1B2A;
+  color: #E0E1DD;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Navbar (copied from home.css) */
+.navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  padding: 0.8rem 1.5rem;
+  z-index: 1000;
+  background: rgba(30, 30, 30, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 0 0 1rem 1rem;
+}
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo {
+  height: 50px;
+}
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+.nav-links a {
+  text-decoration: none;
+  color: #E0E1DD;
+  font-weight: 500;
+  font-size: clamp(0.75rem, 1vw, 0.9rem);
+  transition: color 0.3s;
+}
+.nav-links a:hover,
+.nav-links a.active {
+  color: #58a4b0;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 200px;
+  background: #1B1B1E;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 70px);
+}
+.sidebar h2 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #58a4b0;
+}
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+}
+.sidebar nav ul li {
+  margin: 15px 0;
+}
+.sidebar nav ul li a {
+  text-decoration: none;
+  color: #f7f7f7;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+.sidebar nav ul li a:hover,
+.sidebar nav ul li a.active {
+  color: #58a4b0;
+}
+
+/* Main content */
+.admin-dashboard {
+  display: flex;
+  flex: 1;
+}
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+.admin-header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+/* Cards */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.card span {
+  display: block;
+  margin-top: 10px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Recent Orders (for dashboard.html only) */
+.recent-orders {
+  margin-top: 20px;
+}
+.recent-orders h2 {
+  margin-bottom: 10px;
+}
+.recent-orders table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.recent-orders table th,
+.recent-orders table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.recent-orders table th {
+  background: rgba(0,0,0,0.3);
+}
+.recent-orders table tr:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+/* Buttons */
+.btn-secondary {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 0.5rem 1.2rem;
+  border-radius: 1rem;
+  background: #2F394D;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: background 0.3s ease;
+}
+.btn-secondary:hover {
+  background: #58a4b0;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  .dashboard-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================= */
+/* Orders Page Styling Only  */
+/* ========================= */
+.orders-page {
+  margin-top: 20px;
+}
+
+.orders-page h1 {
+  font-size: 22px;
+  margin-bottom: 15px;
+  color: #58a4b0;
+}
+
+.orders-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.orders-filters select,
+.orders-filters input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #E0E1DD;
+}
+
+.orders-filters select:focus,
+.orders-filters input:focus {
+  border: 1px solid #58a4b0;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.orders-table th {
+  background: rgba(0,0,0,0.3);
+  font-weight: 600;
+}
+
+.orders-table tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Status tags */
+.status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status.completed {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+}
+
+.status.pending {
+  background: rgba(241, 196, 15, 0.2);
+  color: #f1c40f;
+}
+
+.status.cancelled {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+}
+
+/* Action buttons */
+.order-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-small {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  background: #2F394D;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-small:hover {
+  background: #58a4b0;
+}
+
+/* Mobile Responsiveness for Orders */
+@media (max-width: 768px) {
+  .orders-filters {
+    flex-direction: column;
+  }
+
+  .orders-table th,
+  .orders-table td {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .btn-small {
+    font-size: 0.7rem;
+    padding: 5px 8px;
+  }
+}
+/* Orders Page Dropdown Text */
+.orders-filters select {
+  color: #58a4b0; /* Theme color for selected value */
+  background: rgba(255, 255, 255, 0.08);
+}
+.orders-filters select option {
+  color: #E0E1DD; /* Option text color */
+  background: #0D1B2A; /* Matches page background */
+}
+
+/* Align action buttons in table */
+.order-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center; /* Center buttons in cell */
+  align-items: center;     /* Vertically center */
+}
+
+/* Fix table borders */
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  table-layout: fixed; /* Ensures all columns stay aligned */
+  overflow: hidden;
+}
+.orders-table th, .orders-table td {
+  word-wrap: break-word; /* Prevent text overflow */
+}

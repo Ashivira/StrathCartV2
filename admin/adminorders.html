@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Orders</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-content container">
+      <img src="../assets/logo.png" alt="StrathCart Logo" class="logo">
+      <ul class="nav-links">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="menu.html">Menu Items</a></li>
+        <li><a href="orders.html" class="active">Orders</a></li>
+        <li><a href="../login.html">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Orders Page Content -->
+  <main class="main-content orders-page container">
+    <h1>Manage Orders</h1>
+
+    <!-- Filters -->
+    <div class="orders-filters">
+      <select>
+        <option value="all">All Status</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+
+      <input type="text" placeholder="Search by Order ID, User, or Item">
+    </div>
+
+    <!-- Orders Table -->
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>User</th>
+          <th>Order Details</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>#127</td>
+          <td>John M.</td>
+          <td>2 x Avocado, 1 x Banana</td>
+          <td>KES 1,200</td>
+          <td><span class="status completed">Completed</span></td>
+          <td>Oct 3, 2025 - 9:45 AM</td>
+          <td class="order-actions">
+            <button class="btn-small">Refund</button>
+          </td>
+        </tr>
+        <tr>
+          <td>#128</td>
+          <td>Jane D.</td>
+          <td>1 x Mango, 3 x Oranges</td>
+          <td>KES 800</td>
+          <td><span class="status pending">Pending</span></td>
+          <td>Oct 3, 2025 - 10:30 AM</td>
+          <td class="order-actions">
+            <button class="btn-small">Mark as Done</button>
+            <button class="btn-small">Cancel</button>
+          </td>
+        </tr>
+        <tr>
+          <td>#129</td>
+          <td>David K.</td>
+          <td>5 x Tomatoes</td>
+          <td>KES 450</td>
+          <td><span class="status cancelled">Cancelled</span></td>
+          <td>Oct 3, 2025 - 11:00 AM</td>
+          <td class="order-actions">
+            <button class="btn-small">Refund</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Filter + Search Script -->
+  <script>
+    const filterSelect = document.querySelector('.orders-filters select');
+    const searchInput = document.querySelector('.orders-filters input');
+    const tableRows = document.querySelectorAll('.orders-table tbody tr');
+
+    function filterOrders() {
+      const selectedStatus = filterSelect.value.toLowerCase();
+      const searchTerm = searchInput.value.toLowerCase();
+
+      tableRows.forEach(row => {
+        const statusEl = row.querySelector('.status');
+        const user = row.cells[1].textContent.toLowerCase();
+        const orderDetails = row.cells[2].textContent.toLowerCase();
+        const orderId = row.cells[0].textContent.toLowerCase();
+
+        const statusMatch = selectedStatus === 'all' || statusEl.classList.contains(selectedStatus);
+        const searchMatch = orderId.includes(searchTerm) || user.includes(searchTerm) || orderDetails.includes(searchTerm);
+
+        if (statusMatch && searchMatch) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    filterSelect.addEventListener('change', filterOrders);
+    searchInput.addEventListener('input', filterOrders);
+  </script>
+</body>
+</html>

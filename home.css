@@ -1,0 +1,214 @@
+/* home.css – styling only for index.html */
+
+/* Reset */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  }
+
+body {
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+font-size: 14px; /* smaller base font */
+line-height: 1.5;
+background: #0D1B2A;
+color: #E0E1DD;
+scroll-behavior: smooth;
+}
+
+/* Container */
+.container {
+max-width: 1200px;
+margin: 0 auto;
+padding: 0 1rem;
+}
+
+/* Navbar */
+.navbar {
+position: sticky;
+top: 0;
+width: 100%;
+padding: 0.8rem 1.5rem;
+z-index: 1000;
+background: rgba(30, 30, 30, 0.6);
+backdrop-filter: blur(12px);
+border-radius: 0 0 1rem 1rem;
+}
+
+.nav-content {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.logo {
+height: 50px; /* slightly larger logo */
+}
+
+.nav-links {
+list-style: none;
+display: flex;
+gap: 1.2rem;
+flex-wrap: wrap;
+}
+
+.nav-links a {
+text-decoration: none;
+color: #E0E1DD;
+font-weight: 500;
+font-size: clamp(0.75rem, 1vw, 0.9rem); /* responsive font size */
+transition: color 0.3s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+color: #58a4b0;
+}
+
+/* Hero Section */
+.hero {
+display: flex;
+align-items: center;
+justify-content: center;
+text-align: center;
+min-height: 65vh;
+padding: 3rem 2rem;
+margin: 2rem auto;
+border-radius: 2rem;
+background: linear-gradient(135deg, #1B263B, #415A77, #0D1B2A);
+color: #E0E1DD;
+}
+
+.hero h1 {
+font-size: clamp(1.6rem, 3vw, 2.5rem);
+margin-bottom: 1rem;
+}
+
+.hero p {
+font-size: clamp(0.9rem, 2vw, 1.1rem);
+margin-bottom: 2rem;
+}
+
+.hero .btn-primary {
+background: #58a4b0;
+border: none;
+padding: 0.7rem 1.8rem;
+border-radius: 2rem;
+font-size: 0.9rem;
+font-weight: 500;
+color: #fff;
+text-decoration: none; /* no underline */
+cursor: pointer;
+transition: background 0.3s ease;
+}
+
+.hero .btn-primary:hover {
+background: #2F394D;
+}
+
+/* Menu Section */
+.menu {
+padding: 3rem 2rem;
+}
+
+.menu h2 {
+font-size: 1.5rem;
+margin-bottom: 2rem;
+text-align: center;
+}
+
+.menu-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+gap: 1.5rem;
+}
+
+.menu-item {
+background: rgba(255, 255, 255, 0.05);
+border-radius: 1rem;
+padding: 1.2rem;
+text-align: center;
+backdrop-filter: blur(12px);
+transition: transform 0.3s ease;
+}
+
+.menu-item:hover {
+transform: translateY(-5px);
+}
+
+.menu-item img {
+width: 100%;
+border-radius: 0.8rem;
+margin-bottom: 1rem;
+}
+
+.menu-item h3 {
+font-size: 1.1rem;
+margin-bottom: 0.5rem;
+}
+
+.menu-item p {
+font-size: 0.85rem;
+margin-bottom: 1rem;
+color: #E0E1DD;
+}
+
+.menu-item button,
+.btn-secondary {
+padding: 0.5rem 1.2rem;
+border-radius: 1rem;
+background: #2F394D;
+color: #fff;
+border: none;
+cursor: pointer;
+font-size: 0.85rem;
+transition: background 0.3s ease;
+}
+
+.menu-item button:hover,
+.btn-secondary:hover {
+background: #58a4b0;
+}
+
+/* Footer */
+.home-footer {
+background: #1B263B;
+color: #E0E1DD;
+text-align: center;
+padding: 0.7rem;
+font-size: 0.7rem;
+margin-top: 2rem;
+border-radius: 1rem 1rem 0 0;
+}
+
+/* Fade-in animation (used for menu scroll) */
+.fade-in {
+animation: fadeInSection 1s ease-in-out;
+}
+
+@keyframes fadeInSection {
+from {
+opacity: 0;
+transform: translateY(20px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+.nav-links {
+gap: 0.8rem;
+}
+
+.hero {
+padding: 2rem 1rem;
+}
+
+.menu {
+padding: 2rem 1rem;
+}
+}

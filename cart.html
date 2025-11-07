@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StrathCart - Your Cart</title>
+    <link rel="stylesheet" href="cartstyle.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-content container">
+      <img src="assets/logo.png" alt="StrathCart Logo" class="logo">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="menu.html">Menu</a></li>
+        <li><a href="orders.html">My Orders</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="account.html">Account</a></li>
+        <li><a href="cart.html" class="active">Your Cart</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Cart Header -->
+  <div class="container">
+    <div class="cart-header">
+      <h1>Shopping Cart</h1>
+      <p id="cart-item-count">3 items in your cart</p>
+    </div>
+  </div>
+
+  <!-- Cart Container -->
+  <div class="cart-container">
+    
+    <!-- Cart Items Section -->
+    <div class="cart-items" id="cart-items">
+      
+      <!-- Cart Item 1 -->
+      <div class="cart-item" data-item-id="1" data-price="350">
+        <img src="images/meal1.jpg" alt="Grilled Chicken" class="cart-item-image">
+        
+        <div class="cart-item-details">
+          <h3 class="cart-item-title">Grilled Chicken with Salad</h3>
+          <p class="cart-item-description">Juicy grilled chicken breast served with fresh garden salad and herbs.</p>
+          <p class="cart-item-availability">In Stock</p>
+          
+          <div class="cart-item-actions">
+            <div class="quantity-selector">
+              <button class="quantity-btn" onclick="decreaseQuantity(1)">-</button>
+              <input type="text" class="quantity-input" id="qty-1" value="1" readonly>
+              <button class="quantity-btn" onclick="increaseQuantity(1)">+</button>
+            </div>
+            <button class="remove-btn" onclick="removeItem(1)">Remove</button>
+          </div>
+        </div>
+        
+        <div class="cart-item-price-section">
+          <div class="cart-item-price" id="price-1">KES 350.00</div>
+        </div>
+      </div>
+
+      <!-- Cart Item 2 -->
+      <div class="cart-item" data-item-id="2" data-price="420">
+        <img src="images/meal2.jpg" alt="Pasta Alfredo" class="cart-item-image">
+        
+        <div class="cart-item-details">
+          <h3 class="cart-item-title">Pasta Alfredo</h3>
+          <p class="cart-item-description">Creamy pasta with herbs, parmesan cheese, and garlic bread.</p>
+          <p class="cart-item-availability">In Stock</p>
+          
+          <div class="cart-item-actions">
+            <div class="quantity-selector">
+              <button class="quantity-btn" onclick="decreaseQuantity(2)">-</button>
+              <input type="text" class="quantity-input" id="qty-2" value="2" readonly>
+              <button class="quantity-btn" onclick="increaseQuantity(2)">+</button>
+            </div>
+            <button class="remove-btn" onclick="removeItem(2)">Remove</button>
+          </div>
+        </div>
+        
+        <div class="cart-item-price-section">
+          <div class="cart-item-price" id="price-2">KES 840.00</div>
+        </div>
+      </div>
+
+      <!-- Cart Item 3 -->
+      <div class="cart-item" data-item-id="3" data-price="280">
+        <img src="images/meal3.jpg" alt="Veggie Delight" class="cart-item-image">
+        
+        <div class="cart-item-details">
+          <h3 class="cart-item-title">Veggie Delight</h3>
+          <p class="cart-item-description">Colorful vegetarian plate with roasted vegetables and quinoa.</p>
+          <p class="cart-item-availability">In Stock</p>
+          
+          <div class="cart-item-actions">
+            <div class="quantity-selector">
+              <button class="quantity-btn" onclick="decreaseQuantity(3)">-</button>
+              <input type="text" class="quantity-input" id="qty-3" value="1" readonly>
+              <button class="quantity-btn" onclick="increaseQuantity(3)">+</button>
+            </div>
+            <button class="remove-btn" onclick="removeItem(3)">Remove</button>
+          </div>
+        </div>
+        
+        <div class="cart-item-price-section">
+          <div class="cart-item-price" id="price-3">KES 280.00</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Cart Summary -->
+    <div class="cart-summary">
+      <h2>Order Summary</h2>
+      
+      <div class="summary-row">
+        <span>Subtotal (<span id="summary-item-count">4</span> items):</span>
+        <span id="subtotal">KES 1,470.00</span>
+      </div>
+      
+      <div class="summary-row">
+        <span>Service Fee:</span>
+        <span id="service-fee">KES 50.00</span>
+      </div>
+      
+      <div class="summary-row total">
+        <span>Order Total:</span>
+        <span id="total">KES 1,520.00</span>
+      </div>
+      
+      <button class="checkout-btn" onclick="proceedToCheckout()">Proceed to Checkout</button>
+      <a href="menu.html" class="continue-shopping">Continue Shopping</a>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="home-footer">
+    <p>&copy; 2025 StrathCart. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Cart data structure (prepared for Firebase integration)
+    let cartData = {
+      items: [
+        { id: 1, name: "Grilled Chicken with Salad", price: 350, quantity: 1 },
+        { id: 2, name: "Pasta Alfredo", price: 420, quantity: 2 },
+        { id: 3, name: "Veggie Delight", price: 280, quantity: 1 }
+      ],
+      serviceFee: 50
+    };
+
+    // Update item price display
+    function updateItemPrice(itemId) {
+      const item = cartData.items.find(i => i.id === itemId);
+      const priceElement = document.getElementById(`price-${itemId}`);
+      const total = item.price * item.quantity;
+      priceElement.textContent = `KES ${total.toFixed(2)}`;
+    }
+
+    // Update order summary
+    function updateSummary() {
+      const totalItems = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
+      const subtotal = cartData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const total = subtotal + cartData.serviceFee;
+
+      document.getElementById('cart-item-count').textContent = `${cartData.items.length} items in your cart`;
+      document.getElementById('summary-item-count').textContent = totalItems;
+      document.getElementById('subtotal').textContent = `KES ${subtotal.toFixed(2)}`;
+      document.getElementById('total').textContent = `KES ${total.toFixed(2)}`;
+    }
+
+    // Increase quantity
+    function increaseQuantity(itemId) {
+      const item = cartData.items.find(i => i.id === itemId);
+      item.quantity++;
+      document.getElementById(`qty-${itemId}`).value = item.quantity;
+      updateItemPrice(itemId);
+      updateSummary();
+      // TODO: Update Firebase
+    }
+
+    // Decrease quantity
+    function decreaseQuantity(itemId) {
+      const item = cartData.items.find(i => i.id === itemId);
+      if (item.quantity > 1) {
+        item.quantity--;
+        document.getElementById(`qty-${itemId}`).value = item.quantity;
+        updateItemPrice(itemId);
+        updateSummary();
+        // TODO: Update Firebase
+      }
+    }
+
+    // Remove item from cart
+    function removeItem(itemId) {
+      if (confirm('Remove this item from your cart?')) {
+        cartData.items = cartData.items.filter(i => i.id !== itemId);
+        document.querySelector(`[data-item-id="${itemId}"]`).remove();
+        updateSummary();
+        
+        // Check if cart is empty
+        if (cartData.items.length === 0) {
+          showEmptyCart();
+        }
+        // TODO: Update Firebase
+      }
+    }
+
+    // Show empty cart message
+    function showEmptyCart() {
+      document.getElementById('cart-items').innerHTML = `
+        <div class="empty-cart">
+          <h2>Your cart is empty</h2>
+          <p>Looks like you haven't added any items to your cart yet.</p>
+          <a href="menu.html" class="btn-primary">Browse Menu</a>
+        </div>
+      `;
+      document.querySelector('.cart-summary').style.display = 'none';
+    }
+
+    // Proceed to checkout
+    function proceedToCheckout() {
+      // TODO: Integrate with Firebase and authentication
+      alert('Proceeding to checkout...\n\nYou will need to:\n1. Login with admission number\n2. Confirm your email\n3. Review order details\n4. Submit order');
+      // window.location.href = 'checkout.html';
+    }
+
+    // Initialize on page load
+    window.onload = function() {
+      updateSummary();
+      // TODO: Load cart data from Firebase
+    };
+  </script>
+
+</body>
+</html>

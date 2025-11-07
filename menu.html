@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StrathCart - Menu</title>
+  <link rel="stylesheet" href="menu.css">
+  <script src="menu.js"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-content container">
+      <img src="assets/logo.png" alt="StrathCart Logo" class="logo">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="menu.html" class="active">Menu</a></li>
+        <li><a href="orders.html">My Orders</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="account.html">Account</a></li>
+        <li class="cart-link">
+          <a href="cart.html">Your Cart</a>
+          <span class="cart-badge" id="cart-badge">0</span>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Menu Section -->
+  <section class="menu-section container">
+    <h2>Today's Menu</h2>
+    <div class="menu-list" id="menu-list">
+
+      <!-- Menu items will be dynamically loaded here -->
+
+    </div>
+  </section>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span>✓ Item added to cart!</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="menu-footer">
+    <p>&copy; 2025 StrathCart. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
