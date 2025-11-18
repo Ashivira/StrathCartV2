@@ -1,6 +1,5 @@
 @import url('menu.css');
 
-/* Orders Section */
 .orders-section {
   padding: 3rem 2rem;
 }
@@ -11,7 +10,6 @@
   margin-bottom: 1.5rem;
 }
 
-/* Filter Buttons */
 .order-filters {
   text-align: center;
   margin-bottom: 2rem;
@@ -33,7 +31,7 @@
   background: #58a4b0;
 }
 
-/* Orders List */
+
 .orders-list {
   display: grid;
   gap: 1.5rem;

@@ -1,9 +1,9 @@
+//inital start 30/10/25
 document.getElementById('login-form').addEventListener('submit', function(e) {
   e.preventDefault();
   const admission = document.getElementById('admission').value.trim();
   const email = document.getElementById('email').value.trim();
 
-  // Simple validation
   if (!admission) {
     alert('Please enter your admission number.');
     return;
@@ -13,13 +13,9 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     return;
   }
 
-  // For now, store in sessionStorage and redirect to menu page
-  sessionStorage.setItem('admission', admission);
-  sessionStorage.setItem('email', email);
-  window.location.href = 'menu.html';
 });
 
-// Helper: validate institutional email
+//validate email function -1/11/25
 function validateInstitutionalEmail(email) {
   const allowed = ['strathmore.edu', 'students.strathmore.edu'];
   const domain = email.split('@')[1];

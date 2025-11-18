@@ -66,7 +66,7 @@ button:hover {
   text-align: center;
 }
 
-/* ===== AUTH PAGES (Login + Setup) ===== */
+
 
 .auth-body {
   margin: 0;
@@ -117,11 +117,11 @@ button:hover {
 
 .auth-container form input {
   width: 100%;
-  padding: 0.45rem 0.7rem; /* smaller padding */
+  padding: 0.45rem 0.7rem; 
   margin: 0.35rem 0;
   border: none;
   border-radius: 8px;
-  font-size: 0.8rem; /* reduced font size */
+  font-size: 0.8rem; 
   outline: none;
   background: rgba(255, 255, 255, 0.9);
 }

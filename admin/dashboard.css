@@ -1,4 +1,4 @@
-/* Reset */
+/* Admin Dashboard Styling -3/10/25 */
 * {
   margin: 0;
   padding: 0;
@@ -16,14 +16,12 @@ body {
   min-height: 100vh;
 }
 
-/* Container */
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
 }
 
-/* Navbar (copied from home.css) */
 .navbar {
   position: sticky;
   top: 0;
@@ -60,7 +58,6 @@ body {
   color: #58a4b0;
 }
 
-/* Sidebar */
 .sidebar {
   width: 200px;
   background: #1B1B1E;
@@ -92,7 +89,6 @@ body {
   color: #58a4b0;
 }
 
-/* Main content */
 .admin-dashboard {
   display: flex;
   flex: 1;
@@ -107,7 +103,6 @@ body {
   font-size: 22px;
 }
 
-/* Cards */
 .dashboard-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -130,7 +125,6 @@ body {
   font-weight: bold;
 }
 
-/* Recent Orders (for dashboard.html only) */
 .recent-orders {
   margin-top: 20px;
 }
@@ -156,8 +150,6 @@ body {
 .recent-orders table tr:hover {
   background: rgba(255,255,255,0.05);
 }
-
-/* Buttons */
 .btn-secondary {
   display: inline-block;
   margin-top: 10px;
@@ -173,7 +165,6 @@ body {
   background: #58a4b0;
 }
 
-/* Responsiveness */
 @media (max-width: 768px) {
   .sidebar {
     display: none;
@@ -188,9 +179,6 @@ body {
   }
 }
 
-/* ========================= */
-/* Orders Page Styling Only  */
-/* ========================= */
 .orders-page {
   margin-top: 20px;
 }
@@ -248,7 +236,7 @@ body {
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* Status tags */
+
 .status {
   padding: 4px 10px;
   border-radius: 12px;
@@ -272,7 +260,6 @@ body {
   color: #e74c3c;
 }
 
-/* Action buttons */
 .order-actions {
   display: flex;
   gap: 8px;
@@ -293,7 +280,6 @@ body {
   background: #58a4b0;
 }
 
-/* Mobile Responsiveness for Orders */
 @media (max-width: 768px) {
   .orders-filters {
     flex-direction: column;
@@ -310,33 +296,32 @@ body {
     padding: 5px 8px;
   }
 }
-/* Orders Page Dropdown Text */
+
 .orders-filters select {
-  color: #58a4b0; /* Theme color for selected value */
+  color: #58a4b0; 
   background: rgba(255, 255, 255, 0.08);
 }
 .orders-filters select option {
-  color: #E0E1DD; /* Option text color */
-  background: #0D1B2A; /* Matches page background */
+  color: #E0E1DD; 
+  background: #0D1B2A; 
 }
 
-/* Align action buttons in table */
 .order-actions {
   display: flex;
   gap: 8px;
-  justify-content: center; /* Center buttons in cell */
-  align-items: center;     /* Vertically center */
+  justify-content: center; 
+  align-items: center;     
 }
 
-/* Fix table borders */
+
 .orders-table {
   width: 100%;
   border-collapse: collapse;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  table-layout: fixed; /* Ensures all columns stay aligned */
+  table-layout: fixed; 
   overflow: hidden;
 }
 .orders-table th, .orders-table td {
-  word-wrap: break-word; /* Prevent text overflow */
+  word-wrap: break-word; 
 }

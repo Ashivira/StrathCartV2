@@ -1,6 +1,9 @@
-// orders.js
+/*--Project Name : StrathCart
+  Team Members:
+  - Sean Jalemba - 218821
+  - Samuel Kimani - 220237 -->
 
-// Mock Orders (replace with Firebase data)
+  <!--initial start 24/10/2025*/
 let orders = [
   {
     id: "ORD-001",
@@ -28,7 +31,6 @@ let orders = [
   },
 ];
 
-// --- Render Orders ---
 function renderOrders(filter = "all") {
   const container = document.getElementById("orders-list");
   container.innerHTML = "";
@@ -73,7 +75,6 @@ function renderOrders(filter = "all") {
   });
 }
 
-// --- Filter Buttons ---
 const filterButtons = document.querySelectorAll(".filter-btn");
 filterButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -86,15 +87,6 @@ filterButtons.forEach((btn) => {
   });
 });
 
-// --- Firebase Integration Placeholder ---
-// Example structure:
-// import { getDatabase, ref, onValue } from "firebase/database";
-// const db = getDatabase();
-// const ordersRef = ref(db, "orders/user123");
-// onValue(ordersRef, (snapshot) => {
-//   orders = snapshot.val() || [];
-//   renderOrders();
-// });
 
 window.onload = () => {
   renderOrders();

@@ -1,6 +1,4 @@
-/* home.css – styling only for index.html */
-
-/* Reset */
+/* home.css – styling only for index.html -3/10/25*/
 
 * {
   margin: 0;
@@ -10,21 +8,19 @@
 
 body {
 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-font-size: 14px; /* smaller base font */
+font-size: 14px; 
 line-height: 1.5;
 background: #0D1B2A;
 color: #E0E1DD;
 scroll-behavior: smooth;
 }
 
-/* Container */
 .container {
 max-width: 1200px;
 margin: 0 auto;
 padding: 0 1rem;
 }
 
-/* Navbar */
 .navbar {
 position: sticky;
 top: 0;
@@ -43,7 +39,7 @@ align-items: center;
 }
 
 .logo {
-height: 50px; /* slightly larger logo */
+height: 50px; 
 }
 
 .nav-links {
@@ -57,7 +53,7 @@ flex-wrap: wrap;
 text-decoration: none;
 color: #E0E1DD;
 font-weight: 500;
-font-size: clamp(0.75rem, 1vw, 0.9rem); /* responsive font size */
+font-size: clamp(0.75rem, 1vw, 0.9rem); 
 transition: color 0.3s;
 }
 
@@ -66,7 +62,6 @@ transition: color 0.3s;
 color: #58a4b0;
 }
 
-/* Hero Section */
 .hero {
 display: flex;
 align-items: center;
@@ -98,7 +93,7 @@ border-radius: 2rem;
 font-size: 0.9rem;
 font-weight: 500;
 color: #fff;
-text-decoration: none; /* no underline */
+text-decoration: none; 
 cursor: pointer;
 transition: background 0.3s ease;
 }
@@ -107,7 +102,6 @@ transition: background 0.3s ease;
 background: #2F394D;
 }
 
-/* Menu Section */
 .menu {
 padding: 3rem 2rem;
 }
@@ -171,7 +165,6 @@ transition: background 0.3s ease;
 background: #58a4b0;
 }
 
-/* Footer */
 .home-footer {
 background: #1B263B;
 color: #E0E1DD;
@@ -182,7 +175,6 @@ margin-top: 2rem;
 border-radius: 1rem 1rem 0 0;
 }
 
-/* Fade-in animation (used for menu scroll) */
 .fade-in {
 animation: fadeInSection 1s ease-in-out;
 }
@@ -198,7 +190,6 @@ transform: translateY(0);
 }
 }
 
-/* Responsive tweaks */
 @media (max-width: 768px) {
 .nav-links {
 gap: 0.8rem;

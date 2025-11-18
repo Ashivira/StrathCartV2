@@ -1,3 +1,9 @@
+ /*Project Name : StrathCart
+  Team Members:
+  - Sean Jalemba - 218821
+  - Samuel Kimani - 220237 -->
+
+  <!--initial start 1/11/2025-->*/
  const menuItems = [
       {
         id: 1,
