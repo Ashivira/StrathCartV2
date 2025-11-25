@@ -35,12 +35,17 @@
     <h2>My Orders</h2>
     <div class="order-filters">
       <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="in-process">In Process</button>
+      <button class="filter-btn" data-filter="pending">Pending</button>
+      <button class="filter-btn" data-filter="preparing">Preparing</button>
       <button class="filter-btn" data-filter="ready">Ready for Collection</button>
       <button class="filter-btn" data-filter="completed">Completed</button>
+      <button class="filter-btn" data-filter="cancelled">Cancelled</button>
     </div>
 
     <div id="orders-list" class="orders-list">
+      <div class="loading-orders" style="text-align: center; padding: 3rem;">
+        <p>Loading your orders...</p>
+      </div>
     </div>
   </section>
 
@@ -48,6 +53,316 @@
     <p>&copy; 2025 StrathCart. All rights reserved.</p>
   </footer>
 
-  <script src="orders.js"></script>
+  <script type="module">
+    import { auth, db } from "/config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { 
+      collection,
+      query,
+      where,
+      orderBy,
+      getDocs,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    let currentUser = null;
+    let allOrders = [];
+    let currentFilter = 'all';
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (user) {
+        console.log('User authenticated:', user.email);
+        loadOrders();
+        updateCartBadge();
+      } else {
+        console.log('No user, redirecting to login');
+        window.location.href = 'login.html';
+      }
+    });
+
+    async function loadOrders() {
+      try {
+        if (!currentUser) {
+          console.log('No current user');
+          return;
+        }
+
+        console.log('Loading orders for user email:', currentUser.email);
+        
+       
+        const ordersRef = collection(db, "Orders");
+        const q = query(
+          ordersRef,
+          where("email", "==", currentUser.email),
+          orderBy("ordercreated", "desc")
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        console.log('Found', querySnapshot.size, 'orders');
+
+        if (querySnapshot.empty) {
+          showEmptyOrders();
+          return;
+        }
+
+        allOrders = [];
+        querySnapshot.forEach((docSnap) => {
+          const order = docSnap.data();
+          allOrders.push({
+            id: docSnap.id,
+            ...order
+          });
+        });
+
+        console.log('Orders loaded:', allOrders);
+        renderOrders();
+        
+      } catch (error) {
+        console.error("Error loading orders:", error);
+        document.getElementById('orders-list').innerHTML = `
+          <div style="text-align: center; padding: 3rem;">
+            <h3>Error Loading Orders</h3>
+            <p>${error.message}</p>
+            <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Refresh Page</button>
+          </div>
+        `;
+      }
+    }
+
+    function renderOrders() {
+      const ordersContainer = document.getElementById('orders-list');
+      ordersContainer.innerHTML = '';
+
+      let filteredOrders = allOrders;
+      if (currentFilter !== 'all') {
+        filteredOrders = allOrders.filter(order => 
+          order.Status.toLowerCase() === currentFilter.toLowerCase()
+        );
+      }
+
+      if (filteredOrders.length === 0) {
+        ordersContainer.innerHTML = `
+          <div style="text-align: center; padding: 3rem;">
+            <h3>No ${currentFilter !== 'all' ? currentFilter : ''} orders found</h3>
+            <p>You don't have any ${currentFilter !== 'all' ? currentFilter + ' ' : ''}orders yet.</p>
+            <a href="menu.html" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Browse Menu</a>
+          </div>
+        `;
+        return;
+      }
+
+      filteredOrders.forEach(order => {
+        const orderCard = createOrderCard(order);
+        ordersContainer.appendChild(orderCard);
+      });
+    }
+
+    function createOrderCard(order) {
+      const orderDiv = document.createElement('div');
+      orderDiv.className = 'order-card';
+      orderDiv.setAttribute('data-status', order.Status.toLowerCase());
+      const orderDate = order.ordercreated?.toDate ? 
+        order.ordercreated.toDate() : 
+        new Date(order.ordercreated);
+      
+      const collectionTime = order.collectiontime?.toDate ? 
+        order.collectiontime.toDate() : 
+        new Date(order.collectiontime);
+
+      const orderDateStr = orderDate.toLocaleString('en-KE', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const collectionTimeStr = collectionTime.toLocaleString('en-KE', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      const statusInfo = getStatusInfo(order.Status);
+
+ 
+      const total = Number(order.Total) || 0;
+
+      let itemsHTML = '';
+      if (order.Items && Array.isArray(order.Items) && order.Items.length > 0) {
+        itemsHTML = order.Items.map(item => {
+          const itemPrice = Number(item.price) || 0;
+          const itemQty = Number(item.quantity) || 1;
+          return `
+            <div class="order-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+              <div>
+                <h4 style="margin: 0 0 0.25rem 0;">${item.itemname || 'Unknown Item'}</h4>
+                <p style="margin: 0; color: #666; font-size: 0.875rem;">Qty: ${itemQty} × KES ${itemPrice.toFixed(2)}</p>
+              </div>
+              <div style="font-weight: 600;">
+                KES ${(itemPrice * itemQty).toFixed(2)}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else if (order.itemID) {
+        itemsHTML = `
+          <div class="order-item">
+            <h4>Order Item</h4>
+            <p style="color: #666; font-size: 0.875rem;">Item ID: ${order.itemID}</p>
+          </div>
+        `;
+      } else {
+        itemsHTML = `
+          <div class="order-item">
+            <p style="color: #666;">No item details available</p>
+          </div>
+        `;
+      }
+
+      orderDiv.innerHTML = `
+        <div class="order-header">
+          <div class="order-info">
+            <h3>Order #${order.orderID}</h3>
+            <p class="order-date" style="color: #666; margin: 0.25rem 0;">Placed on ${orderDateStr}</p>
+          </div>
+          <span class="order-status ${statusInfo.class}">${statusInfo.text}</span>
+        </div>
+
+        <div class="order-body" style="margin: 1rem 0;">
+          ${itemsHTML}
+          
+          <div class="order-details" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            <p style="margin: 0.25rem 0;"><strong>Collection Time:</strong> ${collectionTimeStr}</p>
+            <p style="margin: 0.25rem 0;"><strong>Email:</strong> ${order.email}</p>
+            ${order.admissionNumber ? `<p style="margin: 0.25rem 0;"><strong>Admission No:</strong> ${order.admissionNumber}</p>` : ''}
+          </div>
+        </div>
+
+        <div class="order-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #eee;">
+          <div class="order-total">
+            <span style="color: #666;">Total:</span>
+            <span class="total-amount" style="font-size: 1.5rem; font-weight: bold; color: #4CAF50; margin-left: 0.5rem;">KES ${total.toFixed(2)}</span>
+          </div>
+          <div class="order-actions">
+            ${getOrderActions(order)}
+          </div>
+        </div>
+      `;
+
+      return orderDiv;
+    }
+
+    function getStatusInfo(status) {
+      const statusLower = status.toLowerCase();
+      
+      const statusMap = {
+        'pending': { class: 'status-pending', text: 'Pending' },
+        'preparing': { class: 'status-preparing', text: 'Preparing' },
+        'ready': { class: 'status-ready', text: 'Ready for Collection' },
+        'completed': { class: 'status-completed', text: 'Completed' },
+        'cancelled': { class: 'status-cancelled', text: 'Cancelled' }
+      };
+
+      return statusMap[statusLower] || { class: 'status-pending', text: status };
+    }
+
+    function getOrderActions(order) {
+      const status = order.Status.toLowerCase();
+      
+      if (status === 'pending') {
+        return `
+          <button class="btn-cancel" onclick="cancelOrder('${order.id}')" style="padding: 0.5rem 1rem; background: #ef5350; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel Order</button>
+        `;
+      } else if (status === 'ready') {
+        return `
+          <button class="btn-primary" onclick="markAsCollected('${order.id}')" style="padding: 0.5rem 1rem; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Mark as Collected</button>
+        `;
+      } else if (status === 'completed') {
+        return `
+          <button class="btn-reorder" onclick="reorder('${order.id}')" style="padding: 0.5rem 1rem; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;">Reorder</button>
+        `;
+      }
+      
+      return '';
+    }
+
+    function showEmptyOrders() {
+      document.getElementById('orders-list').innerHTML = `
+        <div class="empty-orders" style="text-align: center; padding: 3rem;">
+          <h3>No orders yet</h3>
+          <p>You haven't placed any orders. Start browsing our menu!</p>
+          <a href="menu.html" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Browse Menu</a>
+        </div>
+      `;
+    }
+
+    // Filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        currentFilter = this.getAttribute('data-filter');
+        console.log('Filter changed to:', currentFilter);
+
+        renderOrders();
+      });
+    });
+
+    // Order actions (to be implemented)
+    window.cancelOrder = async function(orderId) {
+      if (confirm('Are you sure you want to cancel this order?')) {
+        console.log('Cancelling order:', orderId);
+        // TODO: Update order status in Firebase
+        alert('Order cancellation will be implemented soon');
+      }
+    };
+
+    window.markAsCollected = async function(orderId) {
+      if (confirm('Confirm that you have collected this order?')) {
+        console.log('Marking as collected:', orderId);
+        // TODO: Update order status in Firebase
+        alert('Order completion will be implemented soon');
+      }
+    };
+
+    window.reorder = async function(orderId) {
+      console.log('Reordering:', orderId);
+      const order = allOrders.find(o => o.id === orderId);
+      if (order && order.Items) {
+        // TODO: Add items back to cart
+        alert(`Reordering ${order.Items.length} item(s). This will be implemented soon.`);
+      }
+    };
+
+   
+    async function updateCartBadge() {
+      if (!currentUser) return;
+
+      try {
+        const cartRef = doc(db, "Cart", currentUser.uid);
+        const cartSnap = await getDoc(cartRef);
+        
+        const badge = document.getElementById('cart-badge');
+        
+        if (cartSnap.exists()) {
+          const cartData = cartSnap.data();
+          const count = cartData.items.reduce((total, item) => total + item.quantity, 0);
+          badge.textContent = count;
+          badge.style.display = count > 0 ? 'flex' : 'none';
+        } else {
+          badge.style.display = 'none';
+        }
+      } catch (error) {
+        console.error("Error updating badge:", error);
+      }
+    }
+  </script>
 </body>
 </html>

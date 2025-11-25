@@ -11,7 +11,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StrathCart - Menu</title>
   <link rel="stylesheet" href="menu.css">
-  <script src="menu.js"></script>
 </head>
 <body>
 
@@ -35,10 +34,8 @@
 
   <section class="menu-section container">
     <h2>Today's Menu</h2>
-    <div class="menu-list" id="menu-list">
-
-
-    </div>
+    <div class="loading" id="loading">Loading menu items...</div>
+    <div class="menu-list" id="menu-list" style="display: none;"></div>
   </section>
 
   <div class="toast" id="toast">
@@ -48,6 +45,238 @@
   <footer class="menu-footer">
     <p>&copy; 2025 StrathCart. All rights reserved.</p>
   </footer>
+
+  <script type="module">
+    import { auth, db } from "/config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { 
+      collection, 
+      getDocs, 
+      query, 
+      where, 
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    let currentUser = null;
+    let authReady = false;
+
+    // Wait for Firebase Auth to initialize
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      authReady = true;
+      
+      if (user) {
+        console.log('User authenticated:', user.email);
+        updateCartBadge();
+      } else {
+        console.log('No user authenticated');
+        // Don't redirect immediately - allow browsing menu
+        // Only require auth when adding to cart
+      }
+    });
+
+    async function loadMenuItems() {
+      try {
+        console.log('Loading menu items...');
+        
+        const menuRef = collection(db, "Menuitems");
+        const q = query(menuRef, where("isavailable", "==", true));
+        const querySnapshot = await getDocs(q);
+        
+        console.log('Found', querySnapshot.size, 'available items');
+        
+        const menuList = document.getElementById('menu-list');
+        const loading = document.getElementById('loading');
+        
+        if (querySnapshot.empty) {
+          loading.textContent = 'No menu items available at the moment.';
+          return;
+        }
+
+        loading.style.display = 'none';
+        menuList.style.display = 'grid';
+        
+        querySnapshot.forEach((docSnap) => {
+          const item = docSnap.data();
+          const itemId = docSnap.id;
+          
+          const price = Number(item.price) || 0;
+          const quantAvailable = Number(item.quantavailable) || 0;
+          const itemName = item.itemname || 'Unknown Item';
+          const description = item.description || 'No description available';
+          const imageUrl = item.imageurl || 'assets/logo.png';
+          const isAvailable = item.isavailable === true;
+          
+          console.log('Loading item:', itemName, 'Price:', price);
+          
+          const menuItemDiv = document.createElement('div');
+          menuItemDiv.className = 'menu-item';
+          menuItemDiv.setAttribute('data-item-id', itemId);
+          
+          menuItemDiv.innerHTML = `
+            <img src="${imageUrl}" alt="${itemName}" onerror="this.src='assets/logo.png'">
+            <div class="menu-details">
+              <h3>${itemName}</h3>
+              <p>${description}</p>
+              <span class="availability">
+                ${isAvailable ? `In Stock (${quantAvailable} available)` : 'Out of Stock'}
+              </span>
+              <span class="price">KES ${price.toFixed(2)}</span>
+              <button class="btn-secondary" onclick="addToCart('${itemId}')" ${!isAvailable ? 'disabled' : ''}>
+                ${isAvailable ? 'Add to Cart' : 'Unavailable'}
+              </button>
+            </div>
+          `;
+          
+          menuList.appendChild(menuItemDiv);
+        });
+        
+        console.log('Menu loaded successfully');
+        
+      } catch (error) {
+        console.error("Error loading menu:", error);
+        document.getElementById('loading').textContent = 'Error loading menu. Please refresh the page.';
+      }
+    }
+
+    window.addToCart = async function(itemId) {
+      try {
+        console.log('addToCart called for:', itemId);
+        console.log('Current user:', currentUser ? currentUser.email : 'none');
+      
+        if (!authReady) {
+          console.log('Waiting for auth to initialize...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        if (!currentUser) {
+          console.log('No user logged in, redirecting...');
+          alert('Please login to add items to cart');
+          window.location.href = 'login.html';
+          return;
+        }
+
+        console.log('Fetching item data...');
+        const itemDoc = await getDoc(doc(db, "Menuitems", itemId));
+        if (!itemDoc.exists()) {
+          alert('Item not found');
+          return;
+        }
+
+        const itemData = itemDoc.data();
+        const price = Number(itemData.price) || 0;
+        
+        console.log('Item data:', itemData.itemname, price);
+        console.log('Updating cart for user:', currentUser.uid);
+        
+        const cartRef = doc(db, "Cart", currentUser.uid);
+        const cartSnap = await getDoc(cartRef);
+
+        let cartData;
+        if (cartSnap.exists()) {
+          cartData = cartSnap.data();
+          
+          const existingItemIndex = cartData.items.findIndex(i => i.itemID === itemId);
+          
+          if (existingItemIndex >= 0) {
+            cartData.items[existingItemIndex].quantity += 1;
+            console.log('Increased quantity for existing item');
+          } else {
+            cartData.items.push({
+              itemID: itemId,
+              itemname: itemData.itemname,
+              price: price,
+              quantity: 1,
+              imageurl: itemData.imageurl
+            });
+            console.log('Added new item to cart');
+          }
+          cartData.updatedAt = new Date();
+        } else {
+          cartData = {
+            userId: currentUser.uid,
+            items: [{
+              itemID: itemId,
+              itemname: itemData.itemname,
+              price: price,
+              quantity: 1,
+              imageurl: itemData.imageurl
+            }],
+            updatedAt: new Date()
+          };
+          console.log('Created new cart');
+        }
+
+        await setDoc(cartRef, cartData);
+        console.log('Cart updated successfully');
+        
+        showToast(`${itemData.itemname} added to cart!`);
+        
+        const button = document.querySelector(`[data-item-id="${itemId}"] .btn-secondary`);
+        if (button) {
+          button.textContent = '✓ Added';
+          button.classList.add('added');
+          
+          setTimeout(() => {
+            button.textContent = 'Add to Cart';
+            button.classList.remove('added');
+          }, 1500);
+        }
+        
+        updateCartBadge();
+        
+      } catch (error) {
+        console.error("Error adding to cart:", error);
+        console.error("Error details:", error.message);
+        alert('Failed to add item to cart. Please try again.');
+      }
+    };
+
+    async function updateCartBadge() {
+      if (!currentUser) {
+        console.log('No user for badge update');
+        return;
+      }
+
+      try {
+        const cartRef = doc(db, "Cart", currentUser.uid);
+        const cartSnap = await getDoc(cartRef);
+        
+        const badge = document.getElementById('cart-badge');
+        
+        if (cartSnap.exists()) {
+          const cartData = cartSnap.data();
+          const count = cartData.items.reduce((total, item) => total + item.quantity, 0);
+          badge.textContent = count;
+          badge.style.display = count > 0 ? 'flex' : 'none';
+          console.log('Cart badge updated:', count);
+        } else {
+          badge.style.display = 'none';
+        }
+      } catch (error) {
+        console.error("Error updating badge:", error);
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const span = toast.querySelector('span');
+      if (span) {
+        span.textContent = message;
+      }
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+    window.onload = function() {
+      console.log('Page loaded, initializing...');
+      loadMenuItems();
+    };
+  </script>
 
 </body>
 </html>

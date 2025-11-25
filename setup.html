@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Account - StrathCart</title>
+  <title>Sign Up - StrathCart</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="auth-body">
 
   <div class="auth-container glass-effect">
     <img src="assets/logo.png" alt="StrathCart Logo" class="auth-logo">
-
-    <h2>Create Account</h2>
+    <h2>Create Your Account</h2>
     
     <form id="signupForm">
-      <input type="text" placeholder="First Name" required>
-      <input type="text" placeholder="Last Name" required>
-      <input type="text" placeholder="Admission Number" required>
-      <input type="email" placeholder="name@strathmore.edu" pattern=".+@strathmore\.edu" required>
-      <input type="password" placeholder="Password" required>
-      <button type="submit" class="btn-signup">Sign Up</button>
+      <input type="text" id="fullName" placeholder="Full Name" required>
+      <input type="text" id="admissionNumber" placeholder="Admission Number (e.g., 123456)" required>
+      <input type="email" id="email" placeholder="name@strathmore.edu" required>
+      <input type="password" id="password" placeholder="Password (min 6 characters)" required>
+      <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+      <div id="error-message" style="color: #ef4444; font-size: 0.85rem; margin: 0.5rem 0; display: none;"></div>
+      <button type="submit" class="btn-login">Sign Up</button>
     </form>
 
     <p class="signup-text">Already have an account? 
@@ -30,5 +30,76 @@
   <footer>
     <p>© StrathCart 2025. All Rights Reserved.</p>
   </footer>
+
+  <script type="module">
+  import { auth, db } from "/config.js"; 
+  import { createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const signupForm = document.getElementById('signupForm');
+  const errorMessage = document.getElementById('error-message');
+
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const fullName = document.getElementById('fullName').value.trim();
+    const admissionNumber = document.getElementById('admissionNumber').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    errorMessage.style.display = 'none';
+
+    if (!email.endsWith('@strathmore.edu')) {
+      errorMessage.textContent = 'Please use your Strathmore University email';
+      errorMessage.style.display = 'block';
+      return;
+    }
+
+    if (password.length < 6) {
+      errorMessage.textContent = 'Password must be at least 6 characters';
+      errorMessage.style.display = 'block';
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      errorMessage.textContent = 'Passwords do not match';
+      errorMessage.style.display = 'block';
+      return;
+    }
+
+    const submitBtn = signupForm.querySelector('.btn-login');
+    submitBtn.textContent = 'Creating account...';
+    submitBtn.disabled = true;
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+     
+      await setDoc(doc(db, "Users", user.uid), {
+        admissionNumber: admissionNumber,
+        email: email,
+        fullName: fullName,
+        role: "student",
+        createdAt: new Date(),
+        lastLogin: new Date()
+      });
+      await sendEmailVerification(user);
+    
+      alert('Account created successfully!');
+      window.location.href = 'login.html';
+
+    } catch (error) {
+      console.error('Signup error:', error);
+      errorMessage.textContent = error.code === 'auth/email-already-in-use' 
+        ? 'This email is already registered' 
+        : 'Registration failed: ' + error.message;
+      errorMessage.style.display = 'block';
+      submitBtn.textContent = 'Sign Up';
+      submitBtn.disabled = false;
+    }
+  });
+</script>
 </body>
 </html>

@@ -10,7 +10,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StrathCart - Your Cart</title>
-    <link rel="stylesheet" href="cartstyle.css">
+  <link rel="stylesheet" href="cartstyle.css">
 </head>
 <body>
 
@@ -32,103 +32,30 @@
   <div class="container">
     <div class="cart-header">
       <h1>Shopping Cart</h1>
-      <p id="cart-item-count">3 items in your cart</p>
+      <p id="cart-item-count">Loading cart...</p>
     </div>
   </div>
 
-
   <div class="cart-container">
     
-   
+
     <div class="cart-items" id="cart-items">
-      
-  
-      <div class="cart-item" data-item-id="1" data-price="350">
-        <img src="images/meal1.jpg" alt="Grilled Chicken" class="cart-item-image">
-        
-        <div class="cart-item-details">
-          <h3 class="cart-item-title">Grilled Chicken with Salad</h3>
-          <p class="cart-item-description">Juicy grilled chicken breast served with fresh garden salad and herbs.</p>
-          <p class="cart-item-availability">In Stock</p>
-          
-          <div class="cart-item-actions">
-            <div class="quantity-selector">
-              <button class="quantity-btn" onclick="decreaseQuantity(1)">-</button>
-              <input type="text" class="quantity-input" id="qty-1" value="1" readonly>
-              <button class="quantity-btn" onclick="increaseQuantity(1)">+</button>
-            </div>
-            <button class="remove-btn" onclick="removeItem(1)">Remove</button>
-          </div>
-        </div>
-        
-        <div class="cart-item-price-section">
-          <div class="cart-item-price" id="price-1">KES 350.00</div>
-        </div>
+      <div class="loading-cart" style="text-align: center; padding: 3rem;">
+        <p>Loading your cart...</p>
       </div>
-      <div class="cart-item" data-item-id="2" data-price="420">
-        <img src="images/meal2.jpg" alt="Pasta Alfredo" class="cart-item-image">
-        
-        <div class="cart-item-details">
-          <h3 class="cart-item-title">Pasta Alfredo</h3>
-          <p class="cart-item-description">Creamy pasta with herbs, parmesan cheese, and garlic bread.</p>
-          <p class="cart-item-availability">In Stock</p>
-          
-          <div class="cart-item-actions">
-            <div class="quantity-selector">
-              <button class="quantity-btn" onclick="decreaseQuantity(2)">-</button>
-              <input type="text" class="quantity-input" id="qty-2" value="2" readonly>
-              <button class="quantity-btn" onclick="increaseQuantity(2)">+</button>
-            </div>
-            <button class="remove-btn" onclick="removeItem(2)">Remove</button>
-          </div>
-        </div>
-        
-        <div class="cart-item-price-section">
-          <div class="cart-item-price" id="price-2">KES 840.00</div>
-        </div>
-      </div>
-
-      <div class="cart-item" data-item-id="3" data-price="280">
-        <img src="images/meal3.jpg" alt="Veggie Delight" class="cart-item-image">
-        
-        <div class="cart-item-details">
-          <h3 class="cart-item-title">Veggie Delight</h3>
-          <p class="cart-item-description">Colorful vegetarian plate with roasted vegetables and quinoa.</p>
-          <p class="cart-item-availability">In Stock</p>
-          
-          <div class="cart-item-actions">
-            <div class="quantity-selector">
-              <button class="quantity-btn" onclick="decreaseQuantity(3)">-</button>
-              <input type="text" class="quantity-input" id="qty-3" value="1" readonly>
-              <button class="quantity-btn" onclick="increaseQuantity(3)">+</button>
-            </div>
-            <button class="remove-btn" onclick="removeItem(3)">Remove</button>
-          </div>
-        </div>
-        
-        <div class="cart-item-price-section">
-          <div class="cart-item-price" id="price-3">KES 280.00</div>
-        </div>
-      </div>
-
     </div>
 
-    <div class="cart-summary">
+    <div class="cart-summary" style="display: none;">
       <h2>Order Summary</h2>
       
       <div class="summary-row">
-        <span>Subtotal (<span id="summary-item-count">4</span> items):</span>
-        <span id="subtotal">KES 1,470.00</span>
-      </div>
-      
-      <div class="summary-row">
-        <span>Service Fee:</span>
-        <span id="service-fee">KES 50.00</span>
+        <span>Total Items:</span>
+        <span id="summary-item-count">0</span>
       </div>
       
       <div class="summary-row total">
         <span>Order Total:</span>
-        <span id="total">KES 1,520.00</span>
+        <span id="total">KES 0.00</span>
       </div>
       
       <button class="checkout-btn" onclick="proceedToCheckout()">Proceed to Checkout</button>
@@ -137,91 +64,317 @@
 
   </div>
 
-
   <footer class="home-footer">
     <p>&copy; 2025 StrathCart. All rights reserved.</p>
   </footer>
 
-  <script>
+  <script type="module">
+    import { auth, db } from "/config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { 
+      doc, 
+      getDoc, 
+      setDoc, 
+      deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Note to self - Provision For firebase integration -18/10/2025
-    let cartData = {
-      items: [
-        { id: 1, name: "Grilled Chicken with Salad", price: 350, quantity: 1 },
-        { id: 2, name: "Pasta Alfredo", price: 420, quantity: 2 },
-        { id: 3, name: "Veggie Delight", price: 280, quantity: 1 }
-      ],
-      serviceFee: 50
-    };
-    function updateItemPrice(itemId) {
-      const item = cartData.items.find(i => i.id === itemId);
-      const priceElement = document.getElementById(`price-${itemId}`);
-      const total = item.price * item.quantity;
+    let cartData = { items: [] };
+    let currentUser = null;
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (user) {
+        console.log('User authenticated:', user.email);
+        loadCart();
+      } else {
+        console.log('No user, redirecting to login');
+        window.location.href = 'login.html';
+      }
+    });
+
+    async function loadCart() {
+      try {
+        if (!currentUser) {
+          console.log('No current user');
+          return;
+        }
+
+        console.log('Loading cart for user:', currentUser.uid);
+        const cartRef = doc(db, "Cart", currentUser.uid);
+        const cartSnap = await getDoc(cartRef);
+
+        if (cartSnap.exists()) {
+          const data = cartSnap.data();
+          cartData.items = data.items || [];
+          console.log('Cart loaded with', cartData.items.length, 'items');
+          
+          if (cartData.items.length > 0) {
+            renderCart();
+            updateSummary();
+          } else {
+            showEmptyCart();
+          }
+        } else {
+          console.log('Cart document does not exist');
+          showEmptyCart();
+        }
+        
+      } catch (error) {
+        console.error("Error loading cart:", error);
+        document.getElementById('cart-items').innerHTML = `
+          <div style="text-align: center; padding: 3rem;">
+            <h2>Error Loading Cart</h2>
+            <p>Failed to load your cart. Please refresh the page.</p>
+            <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Refresh Page</button>
+          </div>
+        `;
+      }
+    }
+
+    function renderCart() {
+      const cartItemsContainer = document.getElementById('cart-items');
+      cartItemsContainer.innerHTML = '';
+
+      if (cartData.items.length === 0) {
+        showEmptyCart();
+        return;
+      }
+
+      cartData.items.forEach(item => {
+        const price = Number(item.price) || 0;
+        const quantity = Number(item.quantity) || 1;
+        
+        const cartItemDiv = document.createElement('div');
+        cartItemDiv.className = 'cart-item';
+        cartItemDiv.setAttribute('data-item-id', item.itemID);
+        
+        cartItemDiv.innerHTML = `
+          <img src="${item.imageurl || 'assets/logo.png'}" alt="${item.itemname}" class="cart-item-image" onerror="this.src='assets/logo.png'">
+          
+          <div class="cart-item-details">
+            <h3 class="cart-item-title">${item.itemname}</h3>
+            <p class="cart-item-description">KES ${price.toFixed(2)} each</p>
+            <p class="cart-item-availability">In Stock</p>
+            
+            <div class="cart-item-actions">
+              <div class="quantity-selector">
+                <button class="quantity-btn" onclick="decreaseQuantity('${item.itemID}')">-</button>
+                <input type="text" class="quantity-input" id="qty-${item.itemID}" value="${quantity}" readonly>
+                <button class="quantity-btn" onclick="increaseQuantity('${item.itemID}')">+</button>
+              </div>
+              <button class="remove-btn" onclick="removeItem('${item.itemID}')">Remove</button>
+            </div>
+          </div>
+          
+          <div class="cart-item-price-section">
+            <div class="cart-item-price" id="price-${item.itemID}">KES ${(price * quantity).toFixed(2)}</div>
+          </div>
+        `;
+        
+        cartItemsContainer.appendChild(cartItemDiv);
+      });
+    
+      document.querySelector('.cart-summary').style.display = 'block';
+    }
+
+    function updateItemPrice(itemID) {
+      const item = cartData.items.find(i => i.itemID === itemID);
+      if (!item) return;
+      
+      const price = Number(item.price) || 0;
+      const quantity = Number(item.quantity) || 1;
+      
+      const priceElement = document.getElementById(`price-${itemID}`);
+      const total = price * quantity;
       priceElement.textContent = `KES ${total.toFixed(2)}`;
     }
 
     function updateSummary() {
-      const totalItems = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
-      const subtotal = cartData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const total = subtotal + cartData.serviceFee;
+      const totalItems = cartData.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+      const total = cartData.items.reduce((sum, item) => {
+        const price = Number(item.price) || 0;
+        const quantity = Number(item.quantity) || 0;
+        return sum + (price * quantity);
+      }, 0);
 
-      document.getElementById('cart-item-count').textContent = `${cartData.items.length} items in your cart`;
+      document.getElementById('cart-item-count').textContent = `${cartData.items.length} item${cartData.items.length !== 1 ? 's' : ''} in your cart`;
       document.getElementById('summary-item-count').textContent = totalItems;
-      document.getElementById('subtotal').textContent = `KES ${subtotal.toFixed(2)}`;
       document.getElementById('total').textContent = `KES ${total.toFixed(2)}`;
     }
-    function increaseQuantity(itemId) {
-      const item = cartData.items.find(i => i.id === itemId);
-      item.quantity++;
-      document.getElementById(`qty-${itemId}`).value = item.quantity;
-      updateItemPrice(itemId);
-      updateSummary();
-      // TODO: Update Firebase
-    }
-    function decreaseQuantity(itemId) {
-      const item = cartData.items.find(i => i.id === itemId);
-      if (item.quantity > 1) {
-        item.quantity--;
-        document.getElementById(`qty-${itemId}`).value = item.quantity;
-        updateItemPrice(itemId);
-        updateSummary();
-        // TODO: Update Firebase
-      }
-    }
 
-    function removeItem(itemId) {
-      if (confirm('Remove this item from your cart?')) {
-        cartData.items = cartData.items.filter(i => i.id !== itemId);
-        document.querySelector(`[data-item-id="${itemId}"]`).remove();
+    window.increaseQuantity = async function(itemID) {
+      console.log('Increasing quantity for:', itemID);
+      const item = cartData.items.find(i => i.itemID === itemID);
+      if (!item) return;
+      
+      item.quantity = (Number(item.quantity) || 0) + 1;
+      document.getElementById(`qty-${itemID}`).value = item.quantity;
+      updateItemPrice(itemID);
+      updateSummary();
+      await saveCart();
+    };
+
+    window.decreaseQuantity = async function(itemID) {
+      console.log('Decreasing quantity for:', itemID);
+      const item = cartData.items.find(i => i.itemID === itemID);
+      if (!item) return;
+      
+      const currentQuantity = Number(item.quantity) || 0;
+      
+      if (currentQuantity > 1) {
+        item.quantity = currentQuantity - 1;
+        document.getElementById(`qty-${itemID}`).value = item.quantity;
+        updateItemPrice(itemID);
         updateSummary();
+        await saveCart();
+      } else {
+        window.removeItem(itemID);
+      }
+    };
+
+    window.removeItem = async function(itemID) {
+      if (confirm('Remove this item from your cart?')) {
+        console.log('Removing item:', itemID);
+        cartData.items = cartData.items.filter(i => i.itemID !== itemID);
+        
+        const itemElement = document.querySelector(`[data-item-id="${itemID}"]`);
+        if (itemElement) {
+          itemElement.remove();
+        }
         
         if (cartData.items.length === 0) {
           showEmptyCart();
+        } else {
+          updateSummary();
         }
-        // TODO: Update Firebase
+        
+        await saveCart();
+      }
+    };
+
+    async function saveCart() {
+      try {
+        if (!currentUser) {
+          console.log('No user to save cart for');
+          return;
+        }
+
+        console.log('Saving cart...');
+        const cartRef = doc(db, "Cart", currentUser.uid);
+        
+        if (cartData.items.length === 0) {
+     
+          await deleteDoc(cartRef);
+          console.log('Empty cart deleted');
+        } else {
+        
+          await setDoc(cartRef, {
+            userId: currentUser.uid,
+            items: cartData.items,
+            updatedAt: new Date()
+          });
+          console.log('Cart saved successfully');
+        }
+      } catch (error) {
+        console.error("Error saving cart:", error);
+        alert('Failed to update cart. Please try again.');
+      }
+    }
+
+    async function clearCart() {
+      try {
+        if (!currentUser) return;
+        
+        const cartRef = doc(db, "Cart", currentUser.uid);
+        await deleteDoc(cartRef);
+        cartData.items = [];
+        console.log('Cart cleared');
+      } catch (error) {
+        console.error("Error clearing cart:", error);
       }
     }
 
     function showEmptyCart() {
       document.getElementById('cart-items').innerHTML = `
-        <div class="empty-cart">
+        <div class="empty-cart" style="text-align: center; padding: 3rem;">
           <h2>Your cart is empty</h2>
           <p>Looks like you haven't added any items to your cart yet.</p>
-          <a href="menu.html" class="btn-primary">Browse Menu</a>
+          <a href="menu.html" class="btn-primary" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Browse Menu</a>
         </div>
       `;
-      document.querySelector('.cart-summary').style.display = 'none';
+      
+      document.getElementById('cart-item-count').textContent = '0 items in your cart';
+      
+      const summaryElement = document.querySelector('.cart-summary');
+      if (summaryElement) {
+        summaryElement.style.display = 'none';
+      }
     }
 
-    function proceedToCheckout() {
-      // TODO: Integrate with Firebase 
-      alert('Proceeding to checkout...\n\nYou will need to:\n1. Login with admission number\n2. Confirm your email\n3. Review order details\n4. Submit order');
+    window.proceedToCheckout = async function() {
+      if (!currentUser) {
+        alert('Please login to checkout');
+        window.location.href = 'login.html';
+        return;
+      }
 
-    }
+      if (cartData.items.length === 0) {
+        alert('Your cart is empty!');
+        return;
+      }
 
-    window.onload = function() {
-      updateSummary();
-      // TODO: Load cart data from Firebase
+      try {
+        const total = cartData.items.reduce((sum, item) => {
+          const price = Number(item.price) || 0;
+          const quantity = Number(item.quantity) || 0;
+          return sum + (price * quantity);
+        }, 0);
+        
+        const collectionTime = new Date(Date.now() + 60 * 60 * 1000);
+        const collectionTimeStr = collectionTime.toLocaleString('en-KE', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const orderData = {
+          userId: currentUser.uid,
+          items: cartData.items,
+          total: total,
+          status: 'pending',
+          createdAt: new Date(),
+          collectionTime: collectionTime
+        };
+
+        console.log('Order data:', orderData);
+
+        const confirmed = confirm(
+          `Order Summary:\n\n` +
+          `Items: ${cartData.items.length}\n` +
+          `Total: KES ${total.toFixed(2)}\n` +
+          `Collection Time: ${collectionTimeStr}\n\n` +
+          `Confirm order?`
+        );
+        
+        if (confirmed) {
+          // TODO: Save to Orders collection
+          // const ordersRef = collection(db, "Orders");
+          // await addDoc(ordersRef, orderData);
+          
+          // Clear the cart
+          await clearCart();
+          
+          alert('Order placed successfully! (Orders collection to be implemented)');
+          
+          // TO DO Redirect to orders page (or reload cart)
+          window.location.reload();
+        }
+        
+      } catch (error) {
+        console.error('Checkout error:', error);
+        alert('Checkout failed. Please try again.');
+      }
     };
   </script>
 
