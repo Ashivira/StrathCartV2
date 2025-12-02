@@ -61,6 +61,10 @@ p { font-size: clamp(0.875rem, 2vw, 1rem); line-height: 1.6; }
   padding: 0.8rem 1rem;
   border-radius: 0 0 1rem 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+}
+.mobile-menu-toggle {
+  display: none !important;
 }
 
 .nav-content {
