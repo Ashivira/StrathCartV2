@@ -3,7 +3,6 @@
   - Sean Jalemba - 218821
   - Samuel Kimani - 220237 -->
 
-  <!--initial start 29/10/2025-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,6 +33,33 @@
 
   <section class="menu-section container">
     <h2>Today's Menu</h2>
+
+    <!-- Search and Filter -->
+    <div class="search-filter-container">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          class="search-input" 
+          id="search-input" 
+          placeholder="Search for dishes..."
+          oninput="filterMenu()"
+        >
+      </div>
+      
+      <div class="category-filters">
+        <button class="category-btn active" data-category="all" onclick="filterByCategory('all')">All</button>
+        <button class="category-btn" data-category="Main Course" onclick="filterByCategory('Main Course')">Main Course</button>
+        <button class="category-btn" data-category="Vegetarian" onclick="filterByCategory('Vegetarian')">Vegetarian</button>
+        <button class="category-btn" data-category="Fast Food" onclick="filterByCategory('Fast Food')">Fast Food</button>
+        <button class="category-btn" data-category="Salads" onclick="filterByCategory('Salads')">Salads</button>
+        <button class="category-btn" data-category="Beverages" onclick="filterByCategory('Beverages')">Beverages</button>
+        <button class="category-btn" data-category="Desserts" onclick="filterByCategory('Desserts')">Desserts</button>
+      </div>
+    </div>
+
+    <div class="results-info" id="results-info"></div>
+    
     <div class="loading" id="loading">Loading menu items...</div>
     <div class="menu-list" id="menu-list" style="display: none;"></div>
   </section>
@@ -47,7 +73,7 @@
   </footer>
 
   <script type="module">
-    import { auth, db } from "/config.js";
+    import { auth, db } from './config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { 
       collection, 
@@ -61,79 +87,43 @@
 
     let currentUser = null;
     let authReady = false;
+    let allMenuItems = [];
+    let currentCategory = 'all';
 
-    // Wait for Firebase Auth to initialize
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
       authReady = true;
       
       if (user) {
-        console.log('User authenticated:', user.email);
         updateCartBadge();
-      } else {
-        console.log('No user authenticated');
-        // Don't redirect immediately - allow browsing menu
-        // Only require auth when adding to cart
       }
     });
 
     async function loadMenuItems() {
       try {
-        console.log('Loading menu items...');
-        
         const menuRef = collection(db, "Menuitems");
-        const q = query(menuRef, where("isavailable", "==", true));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await getDocs(menuRef);
         
-        console.log('Found', querySnapshot.size, 'available items');
-        
-        const menuList = document.getElementById('menu-list');
         const loading = document.getElementById('loading');
+        const menuList = document.getElementById('menu-list');
         
         if (querySnapshot.empty) {
           loading.textContent = 'No menu items available at the moment.';
           return;
         }
 
+        allMenuItems = [];
+        querySnapshot.forEach((docSnap) => {
+          allMenuItems.push({
+            id: docSnap.id,
+            ...docSnap.data()
+          });
+        });
+
         loading.style.display = 'none';
         menuList.style.display = 'grid';
         
-        querySnapshot.forEach((docSnap) => {
-          const item = docSnap.data();
-          const itemId = docSnap.id;
-          
-          const price = Number(item.price) || 0;
-          const quantAvailable = Number(item.quantavailable) || 0;
-          const itemName = item.itemname || 'Unknown Item';
-          const description = item.description || 'No description available';
-          const imageUrl = item.imageurl || 'assets/logo.png';
-          const isAvailable = item.isavailable === true;
-          
-          console.log('Loading item:', itemName, 'Price:', price);
-          
-          const menuItemDiv = document.createElement('div');
-          menuItemDiv.className = 'menu-item';
-          menuItemDiv.setAttribute('data-item-id', itemId);
-          
-          menuItemDiv.innerHTML = `
-            <img src="${imageUrl}" alt="${itemName}" onerror="this.src='assets/logo.png'">
-            <div class="menu-details">
-              <h3>${itemName}</h3>
-              <p>${description}</p>
-              <span class="availability">
-                ${isAvailable ? `In Stock (${quantAvailable} available)` : 'Out of Stock'}
-              </span>
-              <span class="price">KES ${price.toFixed(2)}</span>
-              <button class="btn-secondary" onclick="addToCart('${itemId}')" ${!isAvailable ? 'disabled' : ''}>
-                ${isAvailable ? 'Add to Cart' : 'Unavailable'}
-              </button>
-            </div>
-          `;
-          
-          menuList.appendChild(menuItemDiv);
-        });
-        
-        console.log('Menu loaded successfully');
+        displayMenuItems(allMenuItems);
         
       } catch (error) {
         console.error("Error loading menu:", error);
@@ -141,24 +131,99 @@
       }
     }
 
+    function displayMenuItems(items) {
+      const menuList = document.getElementById('menu-list');
+      menuList.innerHTML = '';
+
+      if (items.length === 0) {
+        menuList.innerHTML = '<div class="no-results">No items found matching your criteria.</div>';
+        document.getElementById('results-info').textContent = 'No items found';
+        return;
+      }
+
+      document.getElementById('results-info').textContent = `Showing ${items.length} item${items.length !== 1 ? 's' : ''}`;
+
+      items.forEach(item => {
+        const price = Number(item.price) || 0;
+        const quantAvailable = Number(item.quantavailable) || 0;
+        const itemName = item.itemname || 'Unknown Item';
+        const description = item.description || 'No description available';
+        const category = item.category || 'Uncategorized';
+        const imageUrl = item.imageurl || 'assets/logo.png';
+        const isAvailable = item.isavailable === true && quantAvailable > 0;
+        
+        const menuItemDiv = document.createElement('div');
+        menuItemDiv.className = 'menu-item';
+        menuItemDiv.setAttribute('data-item-id', item.id);
+        menuItemDiv.setAttribute('data-category', category);
+        menuItemDiv.setAttribute('data-name', itemName.toLowerCase());
+        
+        menuItemDiv.innerHTML = `
+          <img src="${imageUrl}" alt="${itemName}" onerror="this.src='assets/logo.png'">
+          <div class="menu-details">
+            <span class="category-badge">${category}</span>
+            <h3>${itemName}</h3>
+            <p>${description}</p>
+            <span class="availability ${!isAvailable ? 'out-of-stock' : ''}">
+              ${isAvailable ? `In Stock (${quantAvailable} available)` : 'Out of Stock'}
+            </span>
+            <span class="price">KES ${price.toFixed(2)}</span>
+            <button class="btn-secondary" onclick="addToCart('${item.id}')" ${!isAvailable ? 'disabled' : ''}>
+              ${isAvailable ? 'Add to Cart' : 'Unavailable'}
+            </button>
+          </div>
+        `;
+        
+        menuList.appendChild(menuItemDiv);
+      });
+    }
+
+    window.filterByCategory = function(category) {
+      currentCategory = category;
+      
+      // Update active button
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      filterMenu();
+    };
+
+    window.filterMenu = function() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      
+      let filtered = allMenuItems;
+      
+      // Filter by category
+      if (currentCategory !== 'all') {
+        filtered = filtered.filter(item => item.category === currentCategory);
+      }
+      
+      // Filter by search term
+      if (searchTerm) {
+        filtered = filtered.filter(item => {
+          const itemName = (item.itemname || '').toLowerCase();
+          const description = (item.description || '').toLowerCase();
+          return itemName.includes(searchTerm) || description.includes(searchTerm);
+        });
+      }
+      
+      displayMenuItems(filtered);
+    };
+
     window.addToCart = async function(itemId) {
       try {
-        console.log('addToCart called for:', itemId);
-        console.log('Current user:', currentUser ? currentUser.email : 'none');
-      
         if (!authReady) {
-          console.log('Waiting for auth to initialize...');
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
         
         if (!currentUser) {
-          console.log('No user logged in, redirecting...');
           alert('Please login to add items to cart');
           window.location.href = 'login.html';
           return;
         }
 
-        console.log('Fetching item data...');
         const itemDoc = await getDoc(doc(db, "Menuitems", itemId));
         if (!itemDoc.exists()) {
           alert('Item not found');
@@ -167,9 +232,6 @@
 
         const itemData = itemDoc.data();
         const price = Number(itemData.price) || 0;
-        
-        console.log('Item data:', itemData.itemname, price);
-        console.log('Updating cart for user:', currentUser.uid);
         
         const cartRef = doc(db, "Cart", currentUser.uid);
         const cartSnap = await getDoc(cartRef);
@@ -182,7 +244,6 @@
           
           if (existingItemIndex >= 0) {
             cartData.items[existingItemIndex].quantity += 1;
-            console.log('Increased quantity for existing item');
           } else {
             cartData.items.push({
               itemID: itemId,
@@ -191,7 +252,6 @@
               quantity: 1,
               imageurl: itemData.imageurl
             });
-            console.log('Added new item to cart');
           }
           cartData.updatedAt = new Date();
         } else {
@@ -206,11 +266,9 @@
             }],
             updatedAt: new Date()
           };
-          console.log('Created new cart');
         }
 
         await setDoc(cartRef, cartData);
-        console.log('Cart updated successfully');
         
         showToast(`${itemData.itemname} added to cart!`);
         
@@ -229,16 +287,12 @@
         
       } catch (error) {
         console.error("Error adding to cart:", error);
-        console.error("Error details:", error.message);
         alert('Failed to add item to cart. Please try again.');
       }
     };
 
     async function updateCartBadge() {
-      if (!currentUser) {
-        console.log('No user for badge update');
-        return;
-      }
+      if (!currentUser) return;
 
       try {
         const cartRef = doc(db, "Cart", currentUser.uid);
@@ -251,7 +305,6 @@
           const count = cartData.items.reduce((total, item) => total + item.quantity, 0);
           badge.textContent = count;
           badge.style.display = count > 0 ? 'flex' : 'none';
-          console.log('Cart badge updated:', count);
         } else {
           badge.style.display = 'none';
         }
@@ -272,8 +325,8 @@
         toast.classList.remove('show');
       }, 3000);
     }
+
     window.onload = function() {
-      console.log('Page loaded, initializing...');
       loadMenuItems();
     };
   </script>
