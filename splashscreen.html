@@ -1,0 +1,345 @@
+<!--Project Name : StrathCart
+  Team Members:
+  - Sean Jalemba - 218821
+  - Samuel Kimani - 220237 
+  Splash Screen - Entry Point-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StrathCart - Campus Food Ordering</title>
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #0D1B2A 0%, #1B263B 50%, #0D1B2A 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Animated Background Circles */
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(88, 164, 176, 0.1);
+      animation: float 20s infinite ease-in-out;
+    }
+
+    .circle:nth-child(1) {
+      width: 300px;
+      height: 300px;
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+
+    .circle:nth-child(2) {
+      width: 200px;
+      height: 200px;
+      bottom: -50px;
+      right: -50px;
+      animation-delay: 5s;
+    }
+
+    .circle:nth-child(3) {
+      width: 150px;
+      height: 150px;
+      top: 50%;
+      right: 10%;
+      animation-delay: 10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-50px) scale(1.1); }
+    }
+
+    /* Splash Container */
+    .splash-container {
+      text-align: center;
+      z-index: 10;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Logo */
+    .logo-container {
+      margin-bottom: 2rem;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .logo {
+      width: clamp(150px, 30vw, 250px);
+      height: auto;
+      filter: drop-shadow(0 10px 30px rgba(88, 164, 176, 0.3));
+    }
+
+    /* Title */
+    .splash-title {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #58a4b0 0%, #A8B2C1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+      animation: fadeIn 1.5s ease-out 0.3s both;
+    }
+
+    /* Subtitle */
+    .splash-subtitle {
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      color: #A8B2C1;
+      margin-bottom: 3rem;
+      animation: fadeIn 1.5s ease-out 0.6s both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Loading Bar */
+    .loading-container {
+      width: clamp(250px, 60vw, 400px);
+      margin: 0 auto 2rem;
+      animation: fadeIn 1.5s ease-out 0.9s both;
+    }
+
+    .loading-bar {
+      height: 4px;
+      background: rgba(88, 164, 176, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loading-progress {
+      height: 100%;
+      background: linear-gradient(90deg, #58a4b0 0%, #A8B2C1 100%);
+      border-radius: 10px;
+      animation: loadProgress 2.5s ease-out forwards;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .loading-progress::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+      );
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes loadProgress {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .loading-text {
+      color: #A8B2C1;
+      font-size: clamp(0.875rem, 2vw, 1rem);
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+
+    /* Call to Action Button (appears after loading) */
+    .cta-button {
+      display: inline-block;
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, #58a4b0 0%, #4a8a94 100%);
+      color: white;
+      text-decoration: none;
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      font-weight: 600;
+      border-radius: 50px;
+      box-shadow: 0 10px 30px rgba(88, 164, 176, 0.3);
+      transition: all 0.3s ease;
+      opacity: 0;
+      animation: fadeInButton 0.5s ease-out 2.8s forwards;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes fadeInButton {
+      to { opacity: 1; }
+    }
+
+    .cta-button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .cta-button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(88, 164, 176, 0.4);
+    }
+
+    .cta-button span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Footer Text */
+    .splash-footer {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #A8B2C1;
+      font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+      animation: fadeIn 1.5s ease-out 1.2s both;
+    }
+
+    /* Auto-redirect indicator */
+    .auto-redirect {
+      color: #58a4b0;
+      font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+      margin-top: 1rem;
+      opacity: 0;
+      animation: fadeIn 0.5s ease-out 3s forwards;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .circle {
+        display: none; /* Hide decorative circles on mobile for performance */
+      }
+    }
+
+    @media (orientation: landscape) and (max-height: 500px) {
+      .splash-container {
+        transform: scale(0.8);
+      }
+      .splash-footer {
+        bottom: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="circle"></div>
+  <div class="circle"></div>
+  <div class="circle"></div>
+
+  <!-- Splash Content -->
+  <div class="splash-container">
+    <div class="logo-container">
+      <img src="assets/logo.png" alt="StrathCart Logo" class="logo">
+    </div>
+
+    <h1 class="splash-title">StrathCart</h1>
+    <p class="splash-subtitle">Your Campus Food Ordering Platform</p>
+
+    <div class="loading-container">
+      <div class="loading-bar">
+        <div class="loading-progress"></div>
+      </div>
+      <p class="loading-text">Loading your dining experience...</p>
+    </div>
+
+    <a href="index.html" class="cta-button" id="ctaButton">
+      <span>Get Started</span>
+    </a>
+
+    <p class="auto-redirect" id="autoRedirect">
+      Redirecting automatically in <span id="countdown">3</span>s...
+    </p>
+  </div>
+
+  <footer class="splash-footer">
+    &copy; 2025 StrathCart. Made by Sean Jalemba & Samuel Kimani
+  </footer>
+
+  <script>
+    // Auto redirect after 6 seconds
+    let countdown = 3;
+    const countdownEl = document.getElementById('countdown');
+    const autoRedirectEl = document.getElementById('autoRedirect');
+
+    // Start countdown after loading animation (3 seconds)
+    setTimeout(() => {
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdownEl) {
+          countdownEl.textContent = countdown;
+        }
+
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          window.location.href = 'index.html';
+        }
+      }, 1000);
+    }, 3000);
+
+    // Prevent multiple redirects if user clicks button
+    document.getElementById('ctaButton')?.addEventListener('click', (e) => {
+      countdown = -1; // Stop auto redirect
+    });
+
+    // Add entrance sound effect (optional)
+    // Uncomment if you want to add audio
+    /*
+    window.addEventListener('DOMContentLoaded', () => {
+      const audio = new Audio('assets/welcome-sound.mp3');
+      audio.volume = 0.3;
+      audio.play().catch(e => console.log('Audio autoplay prevented'));
+    });
+    */
+  </script>
+</body>
+</html>
