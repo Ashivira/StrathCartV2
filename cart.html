@@ -3,7 +3,6 @@
   - Sean Jalemba - 218821
   - Samuel Kimani - 220237 -->
 
-  <!--initial start 15/10/2025-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,34 +33,28 @@
       <h1>Shopping Cart</h1>
       <p id="cart-item-count">Loading cart...</p>
     </div>
-  </div>
 
-  <div class="cart-container">
-    
+    <div class="cart-container">
+      <div class="cart-items" id="cart-items">
+        <div style="text-align: center; padding: 3rem;">
+          <p>Loading your cart...</p>
+        </div>
+      </div>
 
-    <div class="cart-items" id="cart-items">
-      <div class="loading-cart" style="text-align: center; padding: 3rem;">
-        <p>Loading your cart...</p>
+      <div class="cart-summary" id="cart-summary" style="display: none;">
+        <h2>Order Summary</h2>
+        <div class="summary-row">
+          <span>Total Items:</span>
+          <span id="summary-item-count">0</span>
+        </div>
+        <div class="summary-row total">
+          <span>Order Total:</span>
+          <span id="total">KES 0.00</span>
+        </div>
+        <button class="checkout-btn" onclick="proceedToCheckout()">Proceed to Checkout</button>
+        <a href="menu.html" class="continue-shopping">Continue Shopping</a>
       </div>
     </div>
-
-    <div class="cart-summary" style="display: none;">
-      <h2>Order Summary</h2>
-      
-      <div class="summary-row">
-        <span>Total Items:</span>
-        <span id="summary-item-count">0</span>
-      </div>
-      
-      <div class="summary-row total">
-        <span>Order Total:</span>
-        <span id="total">KES 0.00</span>
-      </div>
-      
-      <button class="checkout-btn" onclick="proceedToCheckout()">Proceed to Checkout</button>
-      <a href="menu.html" class="continue-shopping">Continue Shopping</a>
-    </div>
-
   </div>
 
   <footer class="home-footer">
@@ -69,44 +62,67 @@
   </footer>
 
   <script type="module">
-    import { auth, db } from "/config.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { auth, db } from './config.js';
+    import { 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { 
       doc, 
       getDoc, 
       setDoc, 
-      deleteDoc 
+      deleteDoc, 
+      collection, 
+      addDoc,
+      Timestamp 
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     let cartData = { items: [] };
     let currentUser = null;
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-      if (user) {
-        console.log('User authenticated:', user.email);
-        loadCart();
-      } else {
-        console.log('No user, redirecting to login');
+    let userData = null;
+
+    // Check authentication
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
         window.location.href = 'login.html';
+        return;
       }
+
+      currentUser = user;
+      
+      // Get user data from Firestore
+      try {
+        const userDoc = await getDoc(doc(db, "Users", user.uid));
+        if (userDoc.exists()) {
+          userData = userDoc.data();
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
+
+      loadCart();
     });
 
+    // Load cart from Firebase
     async function loadCart() {
-      try {
-        if (!currentUser) {
-          console.log('No current user');
-          return;
-        }
+      if (!currentUser) return;
 
-        console.log('Loading cart for user:', currentUser.uid);
+      try {
         const cartRef = doc(db, "Cart", currentUser.uid);
         const cartSnap = await getDoc(cartRef);
 
         if (cartSnap.exists()) {
           const data = cartSnap.data();
-          cartData.items = data.items || [];
-          console.log('Cart loaded with', cartData.items.length, 'items');
-          
+          cartData.items = Array.isArray(data.items) ? data.items : [];
+
+          // Normalize items
+          cartData.items = cartData.items.map(item => ({
+            itemID: item.itemID || item.id || 'unknown',
+            itemname: item.itemname || 'Unknown Item',
+            price: parseFloat(item.price) || 0,
+            quantity: parseInt(item.quantity) || 1,
+            imageurl: item.imageurl || 'assets/logo.png'
+          }));
+
           if (cartData.items.length > 0) {
             renderCart();
             updateSummary();
@@ -114,269 +130,204 @@
             showEmptyCart();
           }
         } else {
-          console.log('Cart document does not exist');
           showEmptyCart();
         }
-        
       } catch (error) {
         console.error("Error loading cart:", error);
-        document.getElementById('cart-items').innerHTML = `
-          <div style="text-align: center; padding: 3rem;">
-            <h2>Error Loading Cart</h2>
-            <p>Failed to load your cart. Please refresh the page.</p>
-            <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Refresh Page</button>
-          </div>
-        `;
+        showEmptyCart();
       }
     }
 
+    // Render cart items
     function renderCart() {
       const cartItemsContainer = document.getElementById('cart-items');
       cartItemsContainer.innerHTML = '';
 
-      if (cartData.items.length === 0) {
+      if (!cartData.items || cartData.items.length === 0) {
         showEmptyCart();
         return;
       }
 
       cartData.items.forEach(item => {
-        const price = Number(item.price) || 0;
-        const quantity = Number(item.quantity) || 1;
-        
-        const cartItemDiv = document.createElement('div');
-        cartItemDiv.className = 'cart-item';
-        cartItemDiv.setAttribute('data-item-id', item.itemID);
-        
-        cartItemDiv.innerHTML = `
-          <img src="${item.imageurl || 'assets/logo.png'}" alt="${item.itemname}" class="cart-item-image" onerror="this.src='assets/logo.png'">
-          
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.setAttribute('data-item-id', item.itemID);
+
+        div.innerHTML = `
+          <img src="${item.imageurl}" alt="${item.itemname}" class="cart-item-image" onerror="this.src='assets/logo.png'">
           <div class="cart-item-details">
-            <h3 class="cart-item-title">${item.itemname}</h3>
-            <p class="cart-item-description">KES ${price.toFixed(2)} each</p>
-            <p class="cart-item-availability">In Stock</p>
-            
+            <h3>${item.itemname}</h3>
+            <p>KES ${item.price.toFixed(2)} each</p>
             <div class="cart-item-actions">
-              <div class="quantity-selector">
-                <button class="quantity-btn" onclick="decreaseQuantity('${item.itemID}')">-</button>
-                <input type="text" class="quantity-input" id="qty-${item.itemID}" value="${quantity}" readonly>
-                <button class="quantity-btn" onclick="increaseQuantity('${item.itemID}')">+</button>
-              </div>
-              <button class="remove-btn" onclick="removeItem('${item.itemID}')">Remove</button>
+              <button onclick="decreaseQuantity('${item.itemID}')">-</button>
+              <input type="text" id="qty-${item.itemID}" value="${item.quantity}" readonly>
+              <button onclick="increaseQuantity('${item.itemID}')">+</button>
+              <button onclick="removeItem('${item.itemID}')" style="margin-left: 1rem; background: #ef4444;">Remove</button>
             </div>
           </div>
-          
-          <div class="cart-item-price-section">
-            <div class="cart-item-price" id="price-${item.itemID}">KES ${(price * quantity).toFixed(2)}</div>
+          <div class="cart-item-price" id="price-${item.itemID}">
+            KES ${(item.price * item.quantity).toFixed(2)}
           </div>
         `;
-        
-        cartItemsContainer.appendChild(cartItemDiv);
+
+        cartItemsContainer.appendChild(div);
       });
-    
-      document.querySelector('.cart-summary').style.display = 'block';
+
+      document.getElementById('cart-summary').style.display = 'block';
     }
 
-    function updateItemPrice(itemID) {
-      const item = cartData.items.find(i => i.itemID === itemID);
-      if (!item) return;
-      
-      const price = Number(item.price) || 0;
-      const quantity = Number(item.quantity) || 1;
-      
-      const priceElement = document.getElementById(`price-${itemID}`);
-      const total = price * quantity;
-      priceElement.textContent = `KES ${total.toFixed(2)}`;
-    }
-
+    // Update summary
     function updateSummary() {
-      const totalItems = cartData.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
-      const total = cartData.items.reduce((sum, item) => {
-        const price = Number(item.price) || 0;
-        const quantity = Number(item.quantity) || 0;
-        return sum + (price * quantity);
-      }, 0);
+      const totalItems = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
+      const total = cartData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-      document.getElementById('cart-item-count').textContent = `${cartData.items.length} item${cartData.items.length !== 1 ? 's' : ''} in your cart`;
+      document.getElementById('cart-item-count').textContent = 
+        `${cartData.items.length} item${cartData.items.length !== 1 ? 's' : ''} in your cart`;
       document.getElementById('summary-item-count').textContent = totalItems;
       document.getElementById('total').textContent = `KES ${total.toFixed(2)}`;
     }
 
+    // Save cart to Firebase
+    async function saveCart() {
+      if (!currentUser) return;
+
+      try {
+        const cartRef = doc(db, "Cart", currentUser.uid);
+
+        if (cartData.items.length === 0) {
+          await deleteDoc(cartRef);
+        } else {
+          await setDoc(cartRef, {
+            userId: currentUser.uid,
+            items: cartData.items,
+            updatedAt: Timestamp.now()
+          });
+        }
+      } catch (error) {
+        console.error("Error saving cart:", error);
+      }
+    }
+
+    // Increase quantity
     window.increaseQuantity = async function(itemID) {
-      console.log('Increasing quantity for:', itemID);
       const item = cartData.items.find(i => i.itemID === itemID);
       if (!item) return;
-      
-      item.quantity = (Number(item.quantity) || 0) + 1;
+
+      item.quantity++;
       document.getElementById(`qty-${itemID}`).value = item.quantity;
-      updateItemPrice(itemID);
+      document.getElementById(`price-${itemID}`).textContent = 
+        `KES ${(item.price * item.quantity).toFixed(2)}`;
       updateSummary();
       await saveCart();
     };
 
+    // Decrease quantity
     window.decreaseQuantity = async function(itemID) {
-      console.log('Decreasing quantity for:', itemID);
       const item = cartData.items.find(i => i.itemID === itemID);
       if (!item) return;
-      
-      const currentQuantity = Number(item.quantity) || 0;
-      
-      if (currentQuantity > 1) {
-        item.quantity = currentQuantity - 1;
+
+      if (item.quantity > 1) {
+        item.quantity--;
         document.getElementById(`qty-${itemID}`).value = item.quantity;
-        updateItemPrice(itemID);
+        document.getElementById(`price-${itemID}`).textContent = 
+          `KES ${(item.price * item.quantity).toFixed(2)}`;
         updateSummary();
         await saveCart();
       } else {
-        window.removeItem(itemID);
+        await removeItem(itemID);
       }
     };
 
+    // Remove item
     window.removeItem = async function(itemID) {
-      if (confirm('Remove this item from your cart?')) {
-        console.log('Removing item:', itemID);
-        cartData.items = cartData.items.filter(i => i.itemID !== itemID);
-        
-        const itemElement = document.querySelector(`[data-item-id="${itemID}"]`);
-        if (itemElement) {
-          itemElement.remove();
-        }
-        
-        if (cartData.items.length === 0) {
-          showEmptyCart();
-        } else {
-          updateSummary();
-        }
-        
-        await saveCart();
-      }
-    };
+      if (!confirm('Remove this item from your cart?')) return;
 
-    async function saveCart() {
-      try {
-        if (!currentUser) {
-          console.log('No user to save cart for');
-          return;
-        }
-
-        console.log('Saving cart...');
-        const cartRef = doc(db, "Cart", currentUser.uid);
-        
-        if (cartData.items.length === 0) {
-     
-          await deleteDoc(cartRef);
-          console.log('Empty cart deleted');
-        } else {
-        
-          await setDoc(cartRef, {
-            userId: currentUser.uid,
-            items: cartData.items,
-            updatedAt: new Date()
-          });
-          console.log('Cart saved successfully');
-        }
-      } catch (error) {
-        console.error("Error saving cart:", error);
-        alert('Failed to update cart. Please try again.');
-      }
-    }
-
-    async function clearCart() {
-      try {
-        if (!currentUser) return;
-        
-        const cartRef = doc(db, "Cart", currentUser.uid);
-        await deleteDoc(cartRef);
-        cartData.items = [];
-        console.log('Cart cleared');
-      } catch (error) {
-        console.error("Error clearing cart:", error);
-      }
-    }
-
-    function showEmptyCart() {
-      document.getElementById('cart-items').innerHTML = `
-        <div class="empty-cart" style="text-align: center; padding: 3rem;">
-          <h2>Your cart is empty</h2>
-          <p>Looks like you haven't added any items to your cart yet.</p>
-          <a href="menu.html" class="btn-primary" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Browse Menu</a>
-        </div>
-      `;
-      
-      document.getElementById('cart-item-count').textContent = '0 items in your cart';
-      
-      const summaryElement = document.querySelector('.cart-summary');
-      if (summaryElement) {
-        summaryElement.style.display = 'none';
-      }
-    }
-
-    window.proceedToCheckout = async function() {
-      if (!currentUser) {
-        alert('Please login to checkout');
-        window.location.href = 'login.html';
-        return;
-      }
+      cartData.items = cartData.items.filter(i => i.itemID !== itemID);
+      const el = document.querySelector(`[data-item-id="${itemID}"]`);
+      if (el) el.remove();
 
       if (cartData.items.length === 0) {
-        alert('Your cart is empty!');
+        showEmptyCart();
+      } else {
+        updateSummary();
+      }
+      await saveCart();
+    };
+
+    // Show empty cart
+    function showEmptyCart() {
+      document.getElementById('cart-items').innerHTML = `
+        <div style="text-align: center; padding: 3rem;">
+          <h2>Your cart is empty</h2>
+          <p style="margin: 1rem 0; color: #A8B2C1;">Add items to your cart to proceed with ordering.</p>
+          <a href="menu.html" class="btn-primary">Browse Menu</a>
+        </div>
+      `;
+      document.getElementById('cart-summary').style.display = 'none';
+      document.getElementById('cart-item-count').textContent = '0 items in your cart';
+    }
+
+    // Proceed to checkout
+    window.proceedToCheckout = async function() {
+      if (!currentUser || !userData || cartData.items.length === 0) {
+        alert('Cart is empty or user data not loaded.');
         return;
       }
 
+      const total = cartData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const orderNumber = `ORD-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(Math.random() * 1000)}`;
+      
+      // Calculate collection time (1 hour from now)
+      const orderTime = new Date();
+      const collectionTime = new Date(orderTime.getTime() + 60 * 60 * 1000);
+
+      // Prepare order data matching your Firebase structure
+      const orderData = {
+        orderNumber: orderNumber,
+        orderID: Math.floor(1000 + Math.random() * 9000), // 4-digit order ID
+        userId: currentUser.uid,
+        admissionNumber: userData.admissionNumber || 'N/A',
+        email: currentUser.email,
+        items: cartData.items.map(item => ({
+          itemID: item.itemID,
+          itemname: item.itemname,
+          price: parseFloat(item.price),
+          quantity: parseInt(item.quantity),
+          subtotal: parseFloat(item.price) * parseInt(item.quantity)
+        })),
+        Total: parseFloat(total),
+        Status: 'pending',
+        ordercreated: Timestamp.fromDate(orderTime),
+        collectiontime: Timestamp.fromDate(collectionTime)
+      };
+
+      // Show confirmation
+      const confirmed = confirm(
+        `Order Summary:\n\n` +
+        `Items: ${cartData.items.length}\n` +
+        `Total: KES ${total.toFixed(2)}\n` +
+        `Collection Time: ${collectionTime.toLocaleString()}\n\n` +
+        `Confirm order?`
+      );
+
+      if (!confirmed) return;
+
       try {
-        const total = cartData.items.reduce((sum, item) => {
-          const price = Number(item.price) || 0;
-          const quantity = Number(item.quantity) || 0;
-          return sum + (price * quantity);
-        }, 0);
-        
-        const collectionTime = new Date(Date.now() + 60 * 60 * 1000);
-        const collectionTimeStr = collectionTime.toLocaleString('en-KE', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+        // Save order to Firebase
+        await addDoc(collection(db, "Orders"), orderData);
 
-        const orderData = {
-          userId: currentUser.uid,
-          items: cartData.items,
-          total: total,
-          status: 'pending',
-          createdAt: new Date(),
-          collectionTime: collectionTime
-        };
+        // Clear cart
+        await deleteDoc(doc(db, "Cart", currentUser.uid));
+        cartData.items = [];
 
-        console.log('Order data:', orderData);
+        alert('Order placed successfully!\n\nOrder Number: ' + orderNumber + '\nCollection Time: ' + collectionTime.toLocaleString());
+        window.location.href = 'orders.html';
 
-        const confirmed = confirm(
-          `Order Summary:\n\n` +
-          `Items: ${cartData.items.length}\n` +
-          `Total: KES ${total.toFixed(2)}\n` +
-          `Collection Time: ${collectionTimeStr}\n\n` +
-          `Confirm order?`
-        );
-        
-        if (confirmed) {
-          // TODO: Save to Orders collection
-          // const ordersRef = collection(db, "Orders");
-          // await addDoc(ordersRef, orderData);
-          
-          // Clear the cart
-          await clearCart();
-          
-          alert('Order placed successfully! (Orders collection to be implemented)');
-          
-          // TO DO Redirect to orders page (or reload cart)
-          window.location.reload();
-        }
-        
       } catch (error) {
         console.error('Checkout error:', error);
-        alert('Checkout failed. Please try again.');
+        alert('Failed to place order. Please try again.\n\nError: ' + error.message);
       }
     };
   </script>
-
 </body>
 </html>

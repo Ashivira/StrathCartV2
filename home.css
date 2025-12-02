@@ -203,3 +203,56 @@ padding: 2rem 1rem;
 padding: 2rem 1rem;
 }
 }
+.account-section {
+  min-height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+}
+
+.account-container {
+  background: rgba(255,255,255,0.05);
+  padding: 2rem;
+  border-radius: 2rem;
+  max-width: 500px;
+  width: 100%;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.account-container h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+  color: #58a4b0;
+}
+
+.profile-details p {
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.profile-details span {
+  color: #E0E1DD;
+}
+
+/* Logout button */
+.btn-primary {
+  display: block;
+  margin: 1.5rem auto 0;
+  padding: 0.8rem 1rem;
+  border-radius: 2rem;
+  background: #58a4b0;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.btn-primary:hover {
+  background: #2F394D;
+}
+

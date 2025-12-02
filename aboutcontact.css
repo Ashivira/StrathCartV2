@@ -1,0 +1,47 @@
+/* Shared styling for About Us & Contact Us pages */
+.about-section,
+.contact-section {
+  min-height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+}
+
+.about-container,
+.contact-container {
+  background: rgba(255,255,255,0.05);
+  padding: 2rem 3rem;
+  border-radius: 2rem;
+  max-width: 800px;
+  width: 100%;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  color: #E0E1DD;
+}
+
+.about-container h2,
+.contact-container h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: #58a4b0;
+}
+
+.about-container p,
+.contact-container p {
+  font-size: 1rem;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  color: #E0E1DD;
+}
+
+.contact-container a {
+  color: #58a4b0;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.contact-container a:hover {
+  color: #2F394D;
+}

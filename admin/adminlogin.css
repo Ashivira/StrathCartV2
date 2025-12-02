@@ -187,4 +187,20 @@ footer {
 .admin-link a:hover {
   text-decoration: underline;
 }
+.back-link {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.back-link a {
+  text-decoration: none;   /* removes underline */
+  color: #2f394d;          /* matches login button green */
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.back-link a:hover {
+  color: #f06543;;          /* darker green on hover */
+}
+
 

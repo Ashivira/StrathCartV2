@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account - StrathCart</title>
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-content container">
+      <img src="assets/logo.png" alt="StrathCart Logo" class="logo">
+      <ul class="nav-links">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="menu.html">Menu</a></li>
+        <li><a href="orders.html">My Orders</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="account.html">Account</a></li>
+        <li><a href="cart.html">Your Cart</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Profile Section -->
+  <section class="account-section">
+    <div class="account-container">
+      <h2>My Account</h2>
+
+      <div class="profile-details">
+        <p><strong>Full Name:</strong> <span id="userFullName">Loading...</span></p>
+        <p><strong>Email:</strong> <span id="userEmail">Loading...</span></p>
+      </div>
+
+      <button id="logoutBtn" class="btn-primary">Log Out</button>
+    </div>
+  </section>
+
+  <footer class="home-footer">
+    <p>&copy; 2025 StrathCart. All rights reserved.</p>
+  </footer>
+
+  <script type="module">
+    import { auth } from "./config.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+      } else {
+        // Load user info from Firebase user uid
+        const userData = JSON.parse(sessionStorage.getItem('strathcart_user') || '{}');
+        document.getElementById('userFullName').innerText = userData.fullName || user.displayName || 'N/A';
+        document.getElementById('userEmail').innerText = user.email || 'N/A';
+      }
+    });
+
+    // Logout 
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      signOut(auth).then(() => {
+        sessionStorage.removeItem('strathcart_user');
+        window.location.href = 'login.html';
+      });
+    });
+  </script>
+
+</body>
+</html>
