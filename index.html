@@ -1,8 +1,7 @@
 <!--Project Name : StrathCart
   Team Members:
   - Sean Jalemba - 218821
-  - Samuel Kimani - 220237 
-
+  - Samuel Kimani - 220237
 initial start 3/10/2025-->
 <!DOCTYPE html>
 <html lang="en">
@@ -14,6 +13,7 @@ initial start 3/10/2025-->
 </head>
 <body>
 
+  <!-- Navbar -->
   <nav class="navbar">
     <div class="nav-content container">
       <img src="assets/logo.png" alt="StrathCart Logo" class="logo">
@@ -29,6 +29,7 @@ initial start 3/10/2025-->
     </div>
   </nav>
 
+  <!-- Hero Section -->
   <section class="hero">
     <div class="hero-content">
       <h1>Welcome to StrathCart</h1>
@@ -37,10 +38,10 @@ initial start 3/10/2025-->
     </div>
   </section>
 
+  <!-- Featured Menu Items -->
   <section id="menu" class="menu fade-in">
     <h2>Today's Featured Items</h2>
     <div class="menu-grid" id="featured-items">
-      <!-- Loading state -->
       <div class="loading-state" style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #A8B2C1;">
         Loading featured items...
       </div>
@@ -50,10 +51,12 @@ initial start 3/10/2025-->
     </div>
   </section>
 
+  <!-- Footer -->
   <footer class="home-footer">
     <p>&copy; 2025 StrathCart. All rights reserved.</p>
   </footer>
 
+  <!-- Scripts -->
   <script type="module">
     import { auth, db } from "./config.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -61,17 +64,17 @@ initial start 3/10/2025-->
 
     let currentUser = null;
 
-    // Check authentication
+    // Track auth state without redirecting
     onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = 'login.html';
-      } else {
-        currentUser = user;
+      currentUser = user || null;
+      if (user) {
         console.log('Logged in as:', user.email);
-        
-        // Load featured items
-        loadFeaturedItems();
+      } else {
+        console.log('Not logged in');
       }
+
+      // Load featured items regardless of login
+      loadFeaturedItems();
     });
 
     // Load 3 featured items from Menuitems collection
@@ -82,21 +85,21 @@ initial start 3/10/2025-->
           where("isavailable", "==", true),
           limit(3)
         );
-        
+
         const querySnapshot = await getDocs(menuQuery);
         const menuGrid = document.getElementById('featured-items');
-        
+
         if (querySnapshot.empty) {
           menuGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #A8B2C1;">No items available at the moment.</p>';
           return;
         }
 
         menuGrid.innerHTML = '';
-        
+
         querySnapshot.forEach((docSnap) => {
           const item = docSnap.data();
           const itemId = docSnap.id;
-          
+
           const menuItem = document.createElement('div');
           menuItem.className = 'menu-item';
           menuItem.innerHTML = `
@@ -106,42 +109,40 @@ initial start 3/10/2025-->
             <p class="price" style="font-weight: 700; color: #58a4b0; font-size: 1.2rem; margin: 0.5rem 0;">KES ${item.price}</p>
             <button class="btn-secondary" onclick="addToCart('${itemId}', '${item.itemname.replace(/'/g, "\\'")}', ${item.price}, '${item.imageurl || ''}')">Add to Cart</button>
           `;
-          
+
           menuGrid.appendChild(menuItem);
         });
+
       } catch (error) {
         console.error('Error loading featured items:', error);
         document.getElementById('featured-items').innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #ef4444;">Failed to load items. Please try again.</p>';
       }
     }
 
-    // Add to cart function - saves directly to Firebase
+    // Add to cart function - requires login
     window.addToCart = async function(itemId, itemName, price, imageUrl) {
       if (!currentUser) {
-        alert('Please log in to add items to cart');
+        const goLogin = confirm('You need to log in to add items to your cart. Go to login page?');
+        if (goLogin) {
+          window.location.href = 'login.html';
+        }
         return;
       }
 
       try {
-        // Get existing cart from Firebase
         const cartRef = doc(db, "Cart", currentUser.uid);
         const cartSnap = await getDoc(cartRef);
-        
+
         let cartData = { items: [] };
-        
         if (cartSnap.exists()) {
           cartData = cartSnap.data();
           cartData.items = Array.isArray(cartData.items) ? cartData.items : [];
         }
 
-        // Check if item already exists in cart
         const existingItemIndex = cartData.items.findIndex(item => item.itemID === itemId);
-        
         if (existingItemIndex > -1) {
-          // Increase quantity
           cartData.items[existingItemIndex].quantity += 1;
         } else {
-          // Add new item with proper structure matching your cart.html
           cartData.items.push({
             itemID: itemId,
             itemname: itemName,
@@ -150,20 +151,18 @@ initial start 3/10/2025-->
             imageurl: imageUrl || 'assets/logo.png'
           });
         }
-        
-        // Save to Firebase
+
         await setDoc(cartRef, {
           userId: currentUser.uid,
           items: cartData.items,
           updatedAt: Timestamp.now()
         });
-        
-        // Show success message with option to view cart
+
         const viewCart = confirm(`${itemName} added to cart!\n\nView cart now?`);
         if (viewCart) {
           window.location.href = 'cart.html';
         }
-        
+
       } catch (error) {
         console.error('Error adding to cart:', error);
         alert('Failed to add item to cart. Please try again.');

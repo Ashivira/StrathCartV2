@@ -50,8 +50,8 @@
 
     errorMessage.style.display = 'none';
 
-    if (!email.endsWith('@strathmore.edu')) {
-      errorMessage.textContent = 'Please use your Strathmore University email';
+    if (!email.endsWith('@strathmore.edu')&& !email.endsWith('@gmail.com')) {
+      errorMessage.textContent = 'Please use your Strathmore University email or Authorized Gmail Account';
       errorMessage.style.display = 'block';
       return;
     }

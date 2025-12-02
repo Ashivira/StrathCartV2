@@ -52,7 +52,7 @@
 
     errorMessage.style.display = 'none';
 
-    if (!email.endsWith('@strathmore.edu')) {
+    if (!email.endsWith('@strathmore.edu')&& !email.endsWith('@gmail.com'))  {
       errorMessage.textContent = 'Please use your Strathmore University email';
       errorMessage.style.display = 'block';
       return;

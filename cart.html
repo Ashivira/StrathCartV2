@@ -51,7 +51,7 @@
           <span>Order Total:</span>
           <span id="total">KES 0.00</span>
         </div>
-        <button class="checkout-btn" onclick="proceedToCheckout()">Proceed to Checkout</button>
+        <button class="checkout-btn" id="checkout-btn" onclick="proceedToCheckout()">Proceed to Checkout</button>
         <a href="menu.html" class="continue-shopping">Continue Shopping</a>
       </div>
     </div>
@@ -61,6 +61,16 @@
     <p>&copy; 2025 StrathCart. All rights reserved.</p>
   </footer>
 
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>
+    // Initialize EmailJS with your public key
+    (function(){
+      emailjs.init("_EAFuYn_2tA8LaBnV");
+    })();
+  </script>
+
+  <!-- Firebase & Cart JS -->
   <script type="module">
     import { auth, db } from './config.js';
     import { 
@@ -89,11 +99,17 @@
 
       currentUser = user;
       
-      // Get user data from Firestore
+      // Get user data from Firestore (try both "users" and "Users" collections)
       try {
-        const userDoc = await getDoc(doc(db, "Users", user.uid));
+        let userDoc = await getDoc(doc(db, "users", user.uid));
+        if (!userDoc.exists()) {
+          userDoc = await getDoc(doc(db, "Users", user.uid));
+        }
         if (userDoc.exists()) {
           userData = userDoc.data();
+          console.log('User data loaded:', userData);
+        } else {
+          console.warn('User document not found in Firestore');
         }
       } catch (error) {
         console.error("Error loading user data:", error);
@@ -102,7 +118,6 @@
       loadCart();
     });
 
-    // Load cart from Firebase
     async function loadCart() {
       if (!currentUser) return;
 
@@ -138,7 +153,6 @@
       }
     }
 
-    // Render cart items
     function renderCart() {
       const cartItemsContainer = document.getElementById('cart-items');
       cartItemsContainer.innerHTML = '';
@@ -176,7 +190,6 @@
       document.getElementById('cart-summary').style.display = 'block';
     }
 
-    // Update summary
     function updateSummary() {
       const totalItems = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
       const total = cartData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -187,13 +200,11 @@
       document.getElementById('total').textContent = `KES ${total.toFixed(2)}`;
     }
 
-    // Save cart to Firebase
     async function saveCart() {
       if (!currentUser) return;
 
       try {
         const cartRef = doc(db, "Cart", currentUser.uid);
-
         if (cartData.items.length === 0) {
           await deleteDoc(cartRef);
         } else {
@@ -208,7 +219,6 @@
       }
     }
 
-    // Increase quantity
     window.increaseQuantity = async function(itemID) {
       const item = cartData.items.find(i => i.itemID === itemID);
       if (!item) return;
@@ -221,7 +231,6 @@
       await saveCart();
     };
 
-    // Decrease quantity
     window.decreaseQuantity = async function(itemID) {
       const item = cartData.items.find(i => i.itemID === itemID);
       if (!item) return;
@@ -238,7 +247,6 @@
       }
     };
 
-    // Remove item
     window.removeItem = async function(itemID) {
       if (!confirm('Remove this item from your cart?')) return;
 
@@ -254,7 +262,6 @@
       await saveCart();
     };
 
-    // Show empty cart
     function showEmptyCart() {
       document.getElementById('cart-items').innerHTML = `
         <div style="text-align: center; padding: 3rem;">
@@ -267,26 +274,28 @@
       document.getElementById('cart-item-count').textContent = '0 items in your cart';
     }
 
-    // Proceed to checkout
+    // Proceed to checkout with EmailJS
     window.proceedToCheckout = async function() {
-      if (!currentUser || !userData || cartData.items.length === 0) {
+      if (!currentUser || cartData.items.length === 0) {
         alert('Cart is empty or user data not loaded.');
         return;
       }
 
+      const checkoutBtn = document.getElementById('checkout-btn');
+      checkoutBtn.disabled = true;
+      checkoutBtn.textContent = 'Processing...';
+
       const total = cartData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const orderNumber = `ORD-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(Math.random() * 1000)}`;
       
-      // Calculate collection time (1 hour from now)
       const orderTime = new Date();
-      const collectionTime = new Date(orderTime.getTime() + 60 * 60 * 1000);
+      const collectionTime = new Date(orderTime.getTime() + 60 * 60 * 1000); // +1 hour
 
-      // Prepare order data matching your Firebase structure
       const orderData = {
         orderNumber: orderNumber,
-        orderID: Math.floor(1000 + Math.random() * 9000), // 4-digit order ID
+        orderID: Math.floor(1000 + Math.random() * 9000),
         userId: currentUser.uid,
-        admissionNumber: userData.admissionNumber || 'N/A',
+        admissionNumber: userData?.admissionNumber || 'N/A',
         email: currentUser.email,
         items: cartData.items.map(item => ({
           itemID: item.itemID,
@@ -301,7 +310,6 @@
         collectiontime: Timestamp.fromDate(collectionTime)
       };
 
-      // Show confirmation
       const confirmed = confirm(
         `Order Summary:\n\n` +
         `Items: ${cartData.items.length}\n` +
@@ -310,24 +318,73 @@
         `Confirm order?`
       );
 
-      if (!confirmed) return;
+      if (!confirmed) {
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = 'Proceed to Checkout';
+        return;
+      }
 
       try {
-        // Save order to Firebase
+        // 1. Save order to Firestore
         await addDoc(collection(db, "Orders"), orderData);
+        console.log('Order saved to Firestore');
 
-        // Clear cart
+        // 2. Prepare email items list
+        const itemsList = cartData.items.map(item => 
+          `${item.itemname} x${item.quantity} - KES ${(item.price * item.quantity).toFixed(2)}`
+        ).join('\n');
+
+        // 3. Send email via EmailJS
+        const emailParams = {
+          user_name: userData?.fullName || userData?.name || 'Customer',
+          user_email: currentUser.email, // Make sure this matches your EmailJS template variable
+          order_number: orderNumber,
+          order_items: itemsList,
+          order_total: total.toFixed(2),
+          collection_time: collectionTime.toLocaleString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        };
+
+        console.log('Sending email with params:', emailParams);
+        console.log('Recipient email:', currentUser.email);
+
+        // Send email with explicit recipient
+        await emailjs.send(
+          'service_yuralkh', 
+          'template_3mspdgl', 
+          emailParams,
+          '_EAFuYn_2tA8LaBnV' // Your public key
+        );
+        console.log('Email sent successfully');
+
+        // 4. Clear cart
         await deleteDoc(doc(db, "Cart", currentUser.uid));
         cartData.items = [];
 
-        alert('Order placed successfully!\n\nOrder Number: ' + orderNumber + '\nCollection Time: ' + collectionTime.toLocaleString());
+        alert(
+          `Order placed successfully!\n\n` +
+          `Order Number: ${orderNumber}\n` +
+          `Collection Time: ${collectionTime.toLocaleString()}\n\n` +
+          `A confirmation email has been sent to ${currentUser.email}`
+        );
+        
         window.location.href = 'orders.html';
 
       } catch (error) {
         console.error('Checkout error:', error);
         alert('Failed to place order. Please try again.\n\nError: ' + error.message);
+        
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = 'Proceed to Checkout';
       }
     };
   </script>
+
 </body>
 </html>

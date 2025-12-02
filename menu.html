@@ -90,6 +90,7 @@
     let allMenuItems = [];
     let currentCategory = 'all';
 
+    // Track auth state
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
       authReady = true;
@@ -195,12 +196,10 @@
       
       let filtered = allMenuItems;
       
-      // Filter by category
       if (currentCategory !== 'all') {
         filtered = filtered.filter(item => item.category === currentCategory);
       }
       
-      // Filter by search term
       if (searchTerm) {
         filtered = filtered.filter(item => {
           const itemName = (item.itemname || '').toLowerCase();
@@ -212,123 +211,94 @@
       displayMenuItems(filtered);
     };
 
+    // Add to cart - login required
     window.addToCart = async function(itemId) {
-      try {
-        if (!authReady) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        if (!currentUser) {
-          alert('Please login to add items to cart');
-          window.location.href = 'login.html';
-          return;
-        }
+      if (!authReady) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
+      if (!currentUser) {
+        const goLogin = confirm('You need to log in to add items to your cart. Go to login page?');
+        if (goLogin) window.location.href = 'login.html';
+        return;
+      }
+
+      try {
         const itemDoc = await getDoc(doc(db, "Menuitems", itemId));
-        if (!itemDoc.exists()) {
-          alert('Item not found');
-          return;
-        }
+        if (!itemDoc.exists()) return alert('Item not found');
 
         const itemData = itemDoc.data();
-        const price = Number(itemData.price) || 0;
-        
         const cartRef = doc(db, "Cart", currentUser.uid);
         const cartSnap = await getDoc(cartRef);
 
-        let cartData;
+        let cartData = { items: [] };
         if (cartSnap.exists()) {
           cartData = cartSnap.data();
-          
-          const existingItemIndex = cartData.items.findIndex(i => i.itemID === itemId);
-          
-          if (existingItemIndex >= 0) {
-            cartData.items[existingItemIndex].quantity += 1;
+          cartData.items = Array.isArray(cartData.items) ? cartData.items : [];
+          const existingIndex = cartData.items.findIndex(i => i.itemID === itemId);
+          if (existingIndex >= 0) {
+            cartData.items[existingIndex].quantity += 1;
           } else {
             cartData.items.push({
               itemID: itemId,
               itemname: itemData.itemname,
-              price: price,
+              price: Number(itemData.price),
               quantity: 1,
-              imageurl: itemData.imageurl
+              imageurl: itemData.imageurl || 'assets/logo.png'
             });
           }
-          cartData.updatedAt = new Date();
         } else {
           cartData = {
             userId: currentUser.uid,
             items: [{
               itemID: itemId,
               itemname: itemData.itemname,
-              price: price,
+              price: Number(itemData.price),
               quantity: 1,
-              imageurl: itemData.imageurl
-            }],
-            updatedAt: new Date()
+              imageurl: itemData.imageurl || 'assets/logo.png'
+            }]
           };
         }
 
         await setDoc(cartRef, cartData);
-        
+
         showToast(`${itemData.itemname} added to cart!`);
-        
-        const button = document.querySelector(`[data-item-id="${itemId}"] .btn-secondary`);
-        if (button) {
-          button.textContent = '✓ Added';
-          button.classList.add('added');
-          
-          setTimeout(() => {
-            button.textContent = 'Add to Cart';
-            button.classList.remove('added');
-          }, 1500);
-        }
-        
         updateCartBadge();
-        
+
       } catch (error) {
-        console.error("Error adding to cart:", error);
-        alert('Failed to add item to cart. Please try again.');
+        console.error(error);
+        alert('Failed to add item to cart.');
       }
     };
 
     async function updateCartBadge() {
       if (!currentUser) return;
-
       try {
         const cartRef = doc(db, "Cart", currentUser.uid);
         const cartSnap = await getDoc(cartRef);
-        
         const badge = document.getElementById('cart-badge');
-        
+
         if (cartSnap.exists()) {
           const cartData = cartSnap.data();
-          const count = cartData.items.reduce((total, item) => total + item.quantity, 0);
+          const count = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
           badge.textContent = count;
           badge.style.display = count > 0 ? 'flex' : 'none';
         } else {
           badge.style.display = 'none';
         }
-      } catch (error) {
-        console.error("Error updating badge:", error);
+      } catch (err) {
+        console.error(err);
       }
     }
 
     function showToast(message) {
       const toast = document.getElementById('toast');
-      const span = toast.querySelector('span');
-      if (span) {
-        span.textContent = message;
-      }
+      toast.querySelector('span').textContent = message;
       toast.classList.add('show');
-      
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    window.onload = function() {
-      loadMenuItems();
-    };
+    window.onload = loadMenuItems;
   </script>
 
 </body>
