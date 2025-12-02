@@ -3,7 +3,6 @@
   - Sean Jalemba - 218821
   - Samuel Kimani - 220237 -->
 
-  <!--initial start 3/10/2025-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,7 +99,7 @@
     </div>
   </main>
 
-  <!-- Menu Item -->
+  <!-- Menu Item Modal -->
   <div id="menu-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -140,13 +139,11 @@
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    
 
     let currentUser = null;
     let allOrders = [];
     let currentEditId = null;
 
-    // Auth check
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = 'adminlogin.html';
       const userDoc = await getDoc(doc(db, "Users", user.uid));
@@ -163,7 +160,7 @@
       await Promise.all([loadStats(), loadRecentOrders(), loadMenuItems(), loadAllOrders()]);
     }
 
-    // --- Stats ---
+    // ------------------ STATS & ORDERS ------------------
     async function loadStats() {
       const ordersSnap = await getDocs(collection(db, "Orders"));
       const menuSnap = await getDocs(collection(db, "Menuitems"));
@@ -181,7 +178,6 @@
       document.getElementById('menu-items-count').textContent = menuSnap.size;
     }
 
-    // --- Orders ---
     async function loadRecentOrders() {
       const ordersSnap = await getDocs(query(collection(db, "Orders"), orderBy("ordercreated", "desc")));
       const tbody = document.getElementById('recent-orders-body');
@@ -252,7 +248,7 @@
       loadRecentOrders();
     };
 
-    // --- Menu Items ---
+    // ------------------ MENU ITEMS ------------------
     async function loadMenuItems() {
       const menuSnap = await getDocs(collection(db, "Menuitems"));
       const tbody = document.getElementById('menu-items-body');
@@ -307,132 +303,127 @@
       document.getElementById('menu-modal').classList.add('active');
     };
 
-    // Upload helper for Cloudinary
-async function uploadToCloudinary(file) {
-  const url = "https://api.cloudinary.com/v1_1/douictwnx/image/upload";
-
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", "strathcart"); // your unsigned preset
-  formData.append("folder", "menu"); // optional folder
-
-  const res = await fetch(url, {
-    method: "POST",
-    body: formData
-  });
-
-  const data = await res.json();
-
-  return {
-    url: data.secure_url,
-    public_id: data.public_id,
-    delete_token: data.delete_token
-  };
-}
-
-// Save menu item (add or edit)
-window.saveMenuItem = async () => {
-  const name = document.getElementById('item-name').value;
-  const description = document.getElementById('item-description').value;
-  const category = document.getElementById('item-category').value;
-  const price = parseFloat(document.getElementById('item-price').value);
-  const quantity = parseInt(document.getElementById('item-quantity').value);
-  const available = document.getElementById('item-available').checked;
-
-  if (!name || !description || !price || !quantity)
-    return alert('Please fill all fields');
-
-  const imageFile = document.getElementById('item-image').files[0];
-  let imageUrl = "";
-  let cloudinaryId = "";
-  let deleteToken = "";
-
-  if (imageFile) {
-    const uploaded = await uploadToCloudinary(imageFile);
-    imageUrl = uploaded.url;
-    cloudinaryId = uploaded.public_id;
-    deleteToken = uploaded.delete_token;
-  } else if (currentEditId) {
-    const existingDoc = await getDoc(doc(db, "Menuitems", currentEditId));
-    imageUrl = existingDoc.data().imageurl || "";
-    cloudinaryId = existingDoc.data().cloudinary_id || "";
-    deleteToken = existingDoc.data().delete_token || "";
-  }
-
-  const itemData = {
-    itemname: name,
-    description,
-    category,
-    price,
-    quantavailable: quantity,
-    isavailable: available,
-    imageurl: imageUrl,
-    cloudinary_id: cloudinaryId,
-    delete_token: deleteToken
-  };
-
-  if (currentEditId) {
-    await updateDoc(doc(db, "Menuitems", currentEditId), itemData);
-    alert("Menu item updated!");
-  } else {
-    await addDoc(collection(db, "Menuitems"), itemData);
-    alert("Menu item added!");
-  }
-
-  closeMenuModal();
-  loadMenuItems();
-  loadStats();
-};
-
-// Delete menu item (also removes Cloudinary image)
-window.deleteMenuItem = async (itemId) => {
-  if (!confirm('Delete this menu item?')) return;
-
-  const docSnap = await getDoc(doc(db, "Menuitems", itemId));
-
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-
-    if (data.delete_token) {
-      await fetch("https://api.cloudinary.com/v1_1/douictwnx/delete_by_token", {
-        method: "POST",
-        body: new URLSearchParams({ token: data.delete_token })
-      });
+    function previewImage(input) {
+      const preview = document.getElementById('image-preview');
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
     }
-  }
 
-  await deleteDoc(doc(db, "Menuitems", itemId));
-  alert("Menu item deleted");
+    // --- Cloudinary Upload ---
+    async function uploadToCloudinary(file) {
+      try {
+        const url = "https://api.cloudinary.com/v1_1/douictwnx/image/upload";
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "strathcart"); // unsigned preset
+        formData.append("folder", "menu"); // optional folder
 
-  loadMenuItems();
-  loadStats();
-};
+        const res = await fetch(url, { method: "POST", body: formData });
+        if (!res.ok) throw new Error("Upload failed");
 
+        const data = await res.json();
+        return {
+          url: data.secure_url,
+          public_id: data.public_id,
+          delete_token: data.delete_token || null
+        };
+      } catch (err) {
+        console.error("Cloudinary upload error:", err);
+        alert("Failed to upload image. Check console for details.");
+        return { url: "", public_id: "", delete_token: "" };
+      }
+    }
 
-    // --- CREATE ADMIN ---
+    window.saveMenuItem = async () => {
+      const name = document.getElementById('item-name').value.trim();
+      const description = document.getElementById('item-description').value.trim();
+      const category = document.getElementById('item-category').value;
+      const price = parseFloat(document.getElementById('item-price').value);
+      const quantity = parseInt(document.getElementById('item-quantity').value);
+      const available = document.getElementById('item-available').checked;
+
+      if (!name || !description || !price || !quantity)
+        return alert('Please fill all fields');
+
+      const imageFile = document.getElementById('item-image').files[0];
+      let imageUrl = "", cloudinaryId = "", deleteToken = "";
+
+      if (imageFile) {
+        const uploaded = await uploadToCloudinary(imageFile);
+        imageUrl = uploaded.url;
+        cloudinaryId = uploaded.public_id;
+        deleteToken = uploaded.delete_token;
+      } else if (currentEditId) {
+        const existingDoc = await getDoc(doc(db, "Menuitems", currentEditId));
+        const existing = existingDoc.data();
+        imageUrl = existing.imageurl || "";
+        cloudinaryId = existing.cloudinary_id || "";
+        deleteToken = existing.delete_token || "";
+      }
+
+      const itemData = { itemname: name, description, category, price, quantavailable: quantity, isavailable: available, imageurl: imageUrl, cloudinary_id: cloudinaryId, delete_token: deleteToken };
+
+      try {
+        if (currentEditId) {
+          await updateDoc(doc(db, "Menuitems", currentEditId), itemData);
+          alert("Menu item updated!");
+        } else {
+          await addDoc(collection(db, "Menuitems"), itemData);
+          alert("Menu item added!");
+        }
+        closeMenuModal();
+        loadMenuItems();
+        loadStats();
+      } catch (err) {
+        console.error("Error saving menu item:", err);
+        alert("Failed to save menu item.");
+      }
+    };
+
+    window.deleteMenuItem = async (itemId) => {
+      if (!confirm('Delete this menu item?')) return;
+      await deleteDoc(doc(db, "Menuitems", itemId));
+      alert('Menu item deleted');
+      loadMenuItems();
+      loadStats();
+    };
+
+    // ------------------ CREATE ADMIN ------------------
     window.createAdmin = async () => {
-      const fullname = document.getElementById('admin-fullname').value;
-      const email = document.getElementById('admin-email').value;
-      const admission = document.getElementById('admin-admission').value;
+      const fullname = document.getElementById('admin-fullname').value.trim();
+      const email = document.getElementById('admin-email').value.trim();
+      const admission = document.getElementById('admin-admission').value.trim();
       const password = document.getElementById('admin-password').value;
 
-      if (!fullname || !email || !admission || !password) return alert("Please fill all fields");
+      if (!fullname || !email || !admission || !password) return alert('Fill all fields');
+
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const uid = userCredential.user.uid;
-        await setDoc(doc(db, "Users", uid), { fullName: fullname, email, admissionNumber: admission, role: "admin" });
-        alert("Admin account created!");
-        document.getElementById('admin-fullname').value = '';
-        document.getElementById('admin-email').value = '';
-        document.getElementById('admin-admission').value = '';
-        document.getElementById('admin-password').value = '';
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "Users", userCred.user.uid), {
+          fullName: fullname,
+          email,
+          admissionNumber: admission,
+          role: 'admin'
+        });
+        alert('Admin created successfully!');
       } catch (err) {
+        console.error("Error creating admin:", err);
         alert(err.message);
       }
     };
 
     window.logout = () => auth.signOut().then(() => window.location.href = 'adminlogin.html');
 
+    // ------------------ TABS ------------------
     window.switchTab = (tabName) => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
@@ -440,6 +431,5 @@ window.deleteMenuItem = async (itemId) => {
       document.getElementById(`${tabName}-tab`).classList.add('active');
     };
   </script>
-
 </body>
 </html>
