@@ -1,0 +1,175 @@
+<!--Project Name : StrathCart
+  Team Members:
+  - Sean Jalemba - 218821
+  - Samuel Kimani - 220237
+initial start 3/10/2025-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StrathCart - Home</title>
+  <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-content container">
+      <img src="assets/logo.png" alt="StrathCart Logo" class="logo">
+      <ul class="nav-links">
+        <li><a href="home.html" class="active">Home</a></li>
+        <li><a href="menu.html">Menu</a></li>
+        <li><a href="orders.html">My Orders</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="account.html">Account</a></li>
+        <li><a href="cart.html">Your Cart</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Welcome to StrathCart</h1>
+      <p>Your one-stop platform for convenient campus dining.</p>
+      <a href="menu.html" class="btn-primary">Order Now</a>
+    </div>
+  </section>
+
+  <!-- Featured Menu Items -->
+  <section id="menu" class="menu fade-in">
+    <h2>Today's Featured Items</h2>
+    <div class="menu-grid" id="featured-items">
+      <div class="loading-state" style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #A8B2C1;">
+        Loading featured items...
+      </div>
+    </div>
+    <div style="text-align: center; margin-top: 2rem;">
+      <a href="menu.html" class="btn-secondary" style="display: inline-block; padding: 0.8rem 2rem; text-decoration: none;">View Full Menu</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="home-footer">
+    <p>&copy; 2025 StrathCart. All rights reserved.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module">
+    import { auth, db } from "./config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, getDocs, query, where, limit, doc, getDoc, setDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    let currentUser = null;
+
+    // Track auth state without redirecting
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user || null;
+      if (user) {
+        console.log('Logged in as:', user.email);
+      } else {
+        console.log('Not logged in');
+      }
+
+      // Load featured items regardless of login
+      loadFeaturedItems();
+    });
+
+    // Load 3 featured items from Menuitems collection
+    async function loadFeaturedItems() {
+      try {
+        const menuQuery = query(
+          collection(db, "Menuitems"),
+          where("isavailable", "==", true),
+          limit(5)
+        );
+
+        const querySnapshot = await getDocs(menuQuery);
+        const menuGrid = document.getElementById('featured-items');
+
+        if (querySnapshot.empty) {
+          menuGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #A8B2C1;">No items available at the moment.</p>';
+          return;
+        }
+
+        menuGrid.innerHTML = '';
+
+        querySnapshot.forEach((docSnap) => {
+          const item = docSnap.data();
+          const itemId = docSnap.id;
+
+          const menuItem = document.createElement('div');
+          menuItem.className = 'menu-item';
+          menuItem.innerHTML = `
+            <img src="${item.imageurl || 'assets/placeholder.png'}" alt="${item.itemname}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 0.5rem;">
+            <h3>${item.itemname}</h3>
+            <p>${item.description || 'Delicious meal'}</p>
+            <p class="price" style="font-weight: 700; color: #58a4b0; font-size: 1.2rem; margin: 0.5rem 0;">KES ${item.price}</p>
+            <button class="btn-secondary" onclick="addToCart('${itemId}', '${item.itemname.replace(/'/g, "\\'")}', ${item.price}, '${item.imageurl || ''}')">Add to Cart</button>
+          `;
+
+          menuGrid.appendChild(menuItem);
+        });
+
+      } catch (error) {
+        console.error('Error loading featured items:', error);
+        document.getElementById('featured-items').innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #ef4444;">Failed to load items. Please try again.</p>';
+      }
+    }
+
+    // Add to cart function - requires login
+    window.addToCart = async function(itemId, itemName, price, imageUrl) {
+      if (!currentUser) {
+        const goLogin = confirm('You need to log in to add items to your cart. Go to login page?');
+        if (goLogin) {
+          window.location.href = 'login.html';
+        }
+        return;
+      }
+
+      try {
+        const cartRef = doc(db, "Cart", currentUser.uid);
+        const cartSnap = await getDoc(cartRef);
+
+        let cartData = { items: [] };
+        if (cartSnap.exists()) {
+          cartData = cartSnap.data();
+          cartData.items = Array.isArray(cartData.items) ? cartData.items : [];
+        }
+
+        const existingItemIndex = cartData.items.findIndex(item => item.itemID === itemId);
+        if (existingItemIndex > -1) {
+          cartData.items[existingItemIndex].quantity += 1;
+        } else {
+          cartData.items.push({
+            itemID: itemId,
+            itemname: itemName,
+            price: parseFloat(price),
+            quantity: 1,
+            imageurl: imageUrl || 'assets/logo.png'
+          });
+        }
+
+        await setDoc(cartRef, {
+          userId: currentUser.uid,
+          items: cartData.items,
+          updatedAt: Timestamp.now()
+        });
+
+        const viewCart = confirm(`${itemName} added to cart!\n\nView cart now?`);
+        if (viewCart) {
+          window.location.href = 'cart.html';
+        }
+
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        alert('Failed to add item to cart. Please try again.');
+      }
+    };
+  </script>
+
+</body>
+</html>
