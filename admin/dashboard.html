@@ -139,15 +139,14 @@
     import { auth, db } from '../config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    
 
-    const storage = getStorage();
     let currentUser = null;
     let allOrders = [];
     let currentEditId = null;
 
-    // Auth check for login
+    // Auth check
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = 'adminlogin.html';
       const userDoc = await getDoc(doc(db, "Users", user.uid));
@@ -164,7 +163,7 @@
       await Promise.all([loadStats(), loadRecentOrders(), loadMenuItems(), loadAllOrders()]);
     }
 
-    // Load order stats from backend
+    // --- Stats ---
     async function loadStats() {
       const ordersSnap = await getDocs(collection(db, "Orders"));
       const menuSnap = await getDocs(collection(db, "Menuitems"));
@@ -182,7 +181,7 @@
       document.getElementById('menu-items-count').textContent = menuSnap.size;
     }
 
-    // Load recent orders
+    // --- Orders ---
     async function loadRecentOrders() {
       const ordersSnap = await getDocs(query(collection(db, "Orders"), orderBy("ordercreated", "desc")));
       const tbody = document.getElementById('recent-orders-body');
@@ -203,7 +202,6 @@
       if (count === 0) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No orders yet</td></tr>';
     }
 
-    // Load all orders
     async function loadAllOrders() {
       const ordersSnap = await getDocs(query(collection(db, "Orders"), orderBy("ordercreated", "desc")));
       allOrders = [];
@@ -254,7 +252,7 @@
       loadRecentOrders();
     };
 
-    // Load menu items
+    // --- Menu Items ---
     async function loadMenuItems() {
       const menuSnap = await getDocs(collection(db, "Menuitems"));
       const tbody = document.getElementById('menu-items-body');
@@ -262,7 +260,7 @@
       menuSnap.forEach(docSnap => {
         const item = docSnap.data();
         tbody.innerHTML += `<tr>
-          <td><img src="${item.imageurl || '../images/meal1.jpg'}" style="width:50px;height:50px;object-fit:cover;border-radius:0.5rem;"></td>
+          <td><img src="${item.imageurl || '../menu/meal1.jpg'}" style="width:50px;height:50px;object-fit:cover;border-radius:0.5rem;"></td>
           <td>${item.itemname}</td>
           <td>${item.category}</td>
           <td>KES ${item.price}</td>
@@ -309,117 +307,137 @@
       document.getElementById('menu-modal').classList.add('active');
     };
 
-    window.deleteMenuItem = async (itemId) => {
-      if (!confirm('Delete this menu item?')) return;
-      await deleteDoc(doc(db, "Menuitems", itemId));
-      alert('Menu item deleted');
-      loadMenuItems();
-      loadStats();
-    };
+    // Upload helper for Cloudinary
+async function uploadToCloudinary(file) {
+  const url = "https://api.cloudinary.com/v1_1/douictwnx/image/upload";
 
-    window.previewImage = (input) => {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          document.getElementById('image-preview').src = e.target.result;
-          document.getElementById('image-preview').style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
-    };
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "strathcart"); // your unsigned preset
+  formData.append("folder", "menu"); // optional folder
 
-    window.saveMenuItem = async () => {
-      const name = document.getElementById('item-name').value;
-      const description = document.getElementById('item-description').value;
-      const category = document.getElementById('item-category').value;
-      const price = parseFloat(document.getElementById('item-price').value);
-      const quantity = parseInt(document.getElementById('item-quantity').value);
-      const available = document.getElementById('item-available').checked;
+  const res = await fetch(url, {
+    method: "POST",
+    body: formData
+  });
 
-      if (!name || !description || !price || !quantity) return alert('Please fill all fields');
+  const data = await res.json();
 
-      let imageUrl = '';
-      const imageFile = document.getElementById('item-image').files[0];
-      if (imageFile) {
-        const storageRef = ref(storage, `menu/${Date.now()}_${imageFile.name}`);
-        await uploadBytes(storageRef, imageFile);
-        imageUrl = await getDownloadURL(storageRef);
-      } else if (currentEditId) {
-        const existingDoc = await getDoc(doc(db, "Menuitems", currentEditId));
-        imageUrl = existingDoc.data().imageurl || '';
-      }
+  return {
+    url: data.secure_url,
+    public_id: data.public_id,
+    delete_token: data.delete_token
+  };
+}
 
-      const itemData = {
-        itemname: name,
-        description: description,
-        category: category,
-        price: price,
-        quantavailable: quantity,
-        isavailable: available,
-        imageurl: imageUrl
-      };
+// Save menu item (add or edit)
+window.saveMenuItem = async () => {
+  const name = document.getElementById('item-name').value;
+  const description = document.getElementById('item-description').value;
+  const category = document.getElementById('item-category').value;
+  const price = parseFloat(document.getElementById('item-price').value);
+  const quantity = parseInt(document.getElementById('item-quantity').value);
+  const available = document.getElementById('item-available').checked;
 
-      if (currentEditId) {
-        await updateDoc(doc(db, "Menuitems", currentEditId), itemData);
-        alert('Menu item updated!');
-      } else {
-        await addDoc(collection(db, "Menuitems"), itemData);
-        alert('Menu item added!');
-      }
-
-      closeMenuModal();
-      loadMenuItems();
-      loadStats();
-    };
-
-  window.createAdmin = async () => {
-  const fullName = document.getElementById('admin-fullname').value;
-  const email = document.getElementById('admin-email').value;
-  const admission = document.getElementById('admin-admission').value;
-  const password = document.getElementById('admin-password').value;
-
-  if (!fullName || !email || !admission || !password)
+  if (!name || !description || !price || !quantity)
     return alert('Please fill all fields');
 
-  if (!email.endsWith('@strathmore.edu'))
-    return alert('Email must end with @strathmore.edu');
+  const imageFile = document.getElementById('item-image').files[0];
+  let imageUrl = "";
+  let cloudinaryId = "";
+  let deleteToken = "";
 
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const uid = userCredential.user.uid;
-
-   
-    await setDoc(doc(db, "Users", uid), {
-      uid: uid,
-      fullName: fullName,
-      email: email,
-      admissionNumber: admission,
-      role: 'admin',
-      createdAt: new Date()
-    });
-
-    alert('Admin account created successfully!');
-
-    // Clear fields function 
-    document.getElementById('admin-fullname').value = '';
-    document.getElementById('admin-email').value = '';
-    document.getElementById('admin-admission').value = '';
-    document.getElementById('admin-password').value = '';
-
-  } catch (error) {
-    alert('Error: ' + error.message);
+  if (imageFile) {
+    const uploaded = await uploadToCloudinary(imageFile);
+    imageUrl = uploaded.url;
+    cloudinaryId = uploaded.public_id;
+    deleteToken = uploaded.delete_token;
+  } else if (currentEditId) {
+    const existingDoc = await getDoc(doc(db, "Menuitems", currentEditId));
+    imageUrl = existingDoc.data().imageurl || "";
+    cloudinaryId = existingDoc.data().cloudinary_id || "";
+    deleteToken = existingDoc.data().delete_token || "";
   }
+
+  const itemData = {
+    itemname: name,
+    description,
+    category,
+    price,
+    quantavailable: quantity,
+    isavailable: available,
+    imageurl: imageUrl,
+    cloudinary_id: cloudinaryId,
+    delete_token: deleteToken
+  };
+
+  if (currentEditId) {
+    await updateDoc(doc(db, "Menuitems", currentEditId), itemData);
+    alert("Menu item updated!");
+  } else {
+    await addDoc(collection(db, "Menuitems"), itemData);
+    alert("Menu item added!");
+  }
+
+  closeMenuModal();
+  loadMenuItems();
+  loadStats();
 };
+
+// Delete menu item (also removes Cloudinary image)
+window.deleteMenuItem = async (itemId) => {
+  if (!confirm('Delete this menu item?')) return;
+
+  const docSnap = await getDoc(doc(db, "Menuitems", itemId));
+
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+
+    if (data.delete_token) {
+      await fetch("https://api.cloudinary.com/v1_1/douictwnx/delete_by_token", {
+        method: "POST",
+        body: new URLSearchParams({ token: data.delete_token })
+      });
+    }
+  }
+
+  await deleteDoc(doc(db, "Menuitems", itemId));
+  alert("Menu item deleted");
+
+  loadMenuItems();
+  loadStats();
+};
+
+
+    // --- CREATE ADMIN ---
+    window.createAdmin = async () => {
+      const fullname = document.getElementById('admin-fullname').value;
+      const email = document.getElementById('admin-email').value;
+      const admission = document.getElementById('admin-admission').value;
+      const password = document.getElementById('admin-password').value;
+
+      if (!fullname || !email || !admission || !password) return alert("Please fill all fields");
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = userCredential.user.uid;
+        await setDoc(doc(db, "Users", uid), { fullName: fullname, email, admissionNumber: admission, role: "admin" });
+        alert("Admin account created!");
+        document.getElementById('admin-fullname').value = '';
+        document.getElementById('admin-email').value = '';
+        document.getElementById('admin-admission').value = '';
+        document.getElementById('admin-password').value = '';
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+
+    window.logout = () => auth.signOut().then(() => window.location.href = 'adminlogin.html');
+
     window.switchTab = (tabName) => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById(tabName + '-tab').classList.add('active');
-    };
-
-    window.logout = async () => {
-      await auth.signOut();
-      window.location.href = 'adminlogin.html';
+      document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+      document.getElementById(`${tabName}-tab`).classList.add('active');
     };
   </script>
 
