@@ -11,7 +11,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StrathCart - Campus Food Ordering</title>
   <link rel="icon" href="assets/logo.png" type="image/png">
-  <link rel="stylesheet" href="responsive.css">
   <style>
     * {
       margin: 0;
@@ -293,7 +292,7 @@
       <p class="loading-text">Loading your dining experience...</p>
     </div>
 
-    <a href="index.html" class="cta-button" id="ctaButton">
+    <a href="home.html" class="cta-button" id="ctaButton">
       <span>Get Started</span>
     </a>
 
@@ -322,7 +321,7 @@
 
         if (countdown <= 0) {
           clearInterval(countdownInterval);
-          window.location.href = 'index.html';
+          window.location.href = 'home.html';
         }
       }, 1000);
     }, 3000);
