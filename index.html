@@ -30,7 +30,6 @@
       position: relative;
     }
 
-    /* Animated Background Circles */
     .circle {
       position: absolute;
       border-radius: 50%;
@@ -84,8 +83,6 @@
         transform: translateY(0);
       }
     }
-
-    /* Logo */
     .logo-container {
       margin-bottom: 2rem;
       animation: pulse 2s ease-in-out infinite;
@@ -102,7 +99,6 @@
       filter: drop-shadow(0 10px 30px rgba(88, 164, 176, 0.3));
     }
 
-    /* Title */
     .splash-title {
       font-size: clamp(2rem, 6vw, 3.5rem);
       font-weight: 700;
@@ -113,8 +109,6 @@
       margin-bottom: 1rem;
       animation: fadeIn 1.5s ease-out 0.3s both;
     }
-
-    /* Subtitle */
     .splash-subtitle {
       font-size: clamp(1rem, 3vw, 1.5rem);
       color: #A8B2C1;
@@ -126,8 +120,6 @@
       from { opacity: 0; }
       to { opacity: 1; }
     }
-
-    /* Loading Bar */
     .loading-container {
       width: clamp(250px, 60vw, 400px);
       margin: 0 auto 2rem;
@@ -183,8 +175,6 @@
       margin-top: 1rem;
       font-weight: 500;
     }
-
-    /* Call to Action Button (appears after loading) */
     .cta-button {
       display: inline-block;
       padding: 1rem 2.5rem;
@@ -234,7 +224,6 @@
       z-index: 1;
     }
 
-    /* Footer Text */
     .splash-footer {
       position: absolute;
       bottom: 2rem;
@@ -244,8 +233,6 @@
       font-size: clamp(0.75rem, 1.5vw, 0.9rem);
       animation: fadeIn 1.5s ease-out 1.2s both;
     }
-
-    /* Auto-redirect indicator */
     .auto-redirect {
       color: #58a4b0;
       font-size: clamp(0.75rem, 1.5vw, 0.875rem);
@@ -253,11 +240,9 @@
       opacity: 0;
       animation: fadeIn 0.5s ease-out 3s forwards;
     }
-
-    /* Responsive adjustments */
     @media (max-width: 768px) {
       .circle {
-        display: none; /* Hide decorative circles on mobile for performance */
+        display: none; 
       }
     }
 
@@ -272,12 +257,9 @@
   </style>
 </head>
 <body>
-  <!-- Animated Background -->
   <div class="circle"></div>
   <div class="circle"></div>
   <div class="circle"></div>
-
-  <!-- Splash Content -->
   <div class="splash-container">
     <div class="logo-container">
       <img src="assets/logo.png" alt="StrathCart Logo" class="logo">
@@ -312,7 +294,7 @@
     const countdownEl = document.getElementById('countdown');
     const autoRedirectEl = document.getElementById('autoRedirect');
 
-    // Start countdown after loading animation (3 seconds)
+    // countdown after loading animation 
     setTimeout(() => {
       const countdownInterval = setInterval(() => {
         countdown--;
@@ -327,20 +309,10 @@
       }, 1000);
     }, 3000);
 
-    // Prevent multiple redirects if user clicks button
+    // Prevent multiple redirects 
     document.getElementById('ctaButton')?.addEventListener('click', (e) => {
-      countdown = -1; // Stop auto redirect
+      countdown = -1; 
     });
-
-    // Add entrance sound effect (optional)
-    // Uncomment if you want to add audio
-    /*
-    window.addEventListener('DOMContentLoaded', () => {
-      const audio = new Audio('assets/welcome-sound.mp3');
-      audio.volume = 0.3;
-      audio.play().catch(e => console.log('Audio autoplay prevented'));
-    });
-    */
   </script>
 </body>
 </html>

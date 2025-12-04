@@ -35,12 +35,12 @@
     <p>© StrathCart 2025. All Rights Reserved.</p>
   </footer>
 
-  <!-- Firebase v8 Compatible CDN (Correct for browser projects) -->
+  <!-- Firebase Imports -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-  // Firebase config (same as your console)
+  // Firebase config 
   const firebaseConfig = {
   apiKey: "AIzaSyAAVMrLvIyitdeeYWdHXTtVmfOd9WqBcd4",
   authDomain: "strathcart-58800.firebaseapp.com",
@@ -51,7 +51,6 @@
   measurementId: "G-KGKNWES3Q9"
 };
 
-  // Init Firebase
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
 
@@ -77,7 +76,7 @@
 
   auth.onAuthStateChanged(user => {
     if (!user) {
-      // Nobody logged in → send back to login page
+      // Not logged in, redirect to login
       window.location.href = "adminlogin.html";
     }
   });

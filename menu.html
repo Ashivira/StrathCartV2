@@ -36,8 +36,6 @@
 
   <section class="menu-section container">
     <h2>Today's Menu</h2>
-
-    <!-- Search and Filter -->
     <div class="search-filter-container">
       <div class="search-box">
         <span class="search-icon">🔍</span>
@@ -93,7 +91,6 @@
     let allMenuItems = [];
     let currentCategory = 'all';
 
-    // Track auth state
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
       authReady = true;
@@ -184,8 +181,6 @@
 
     window.filterByCategory = function(category) {
       currentCategory = category;
-      
-      // Update active button
       document.querySelectorAll('.category-btn').forEach(btn => {
         btn.classList.remove('active');
       });
@@ -214,7 +209,7 @@
       displayMenuItems(filtered);
     };
 
-    // Add to cart - login required
+    // Add to cart with login required as a prerequisite
     window.addToCart = async function(itemId) {
       if (!authReady) {
         await new Promise(resolve => setTimeout(resolve, 500));

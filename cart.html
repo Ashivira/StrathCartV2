@@ -63,16 +63,16 @@
     <p>&copy; 2025 StrathCart. All rights reserved.</p>
   </footer>
 
-  <!-- EmailJS SDK -->
+  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>
-    // Initialize EmailJS with your public key
+    // Initialize EmailJS with the public key
     (function(){
       emailjs.init("_EAFuYn_2tA8LaBnV");
     })();
   </script>
 
-  <!-- Firebase & Cart JS -->
+  <!-- Firebase & Cart JS  Integration-->
   <script type="module">
     import { auth, db } from './config.js';
     import { 
@@ -92,7 +92,7 @@
     let currentUser = null;
     let userData = null;
 
-    // Check authentication
+    // Authentication Check
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = 'login.html';
@@ -101,7 +101,7 @@
 
       currentUser = user;
       
-      // Get user data from Firestore (try both "users" and "Users" collections)
+      // User Data Retrieval From Firestore
       try {
         let userDoc = await getDoc(doc(db, "users", user.uid));
         if (!userDoc.exists()) {
@@ -130,8 +130,6 @@
         if (cartSnap.exists()) {
           const data = cartSnap.data();
           cartData.items = Array.isArray(data.items) ? data.items : [];
-
-          // Normalize items
           cartData.items = cartData.items.map(item => ({
             itemID: item.itemID || item.id || 'unknown',
             itemname: item.itemname || 'Unknown Item',
@@ -276,7 +274,7 @@
       document.getElementById('cart-item-count').textContent = '0 items in your cart';
     }
 
-    // Proceed to checkout with EmailJS
+    // EmailJS Checkout Integration, & Snackbar Notification
     window.proceedToCheckout = async function() {
       if (!currentUser || cartData.items.length === 0) {
         alert('Cart is empty or user data not loaded.');
@@ -291,8 +289,7 @@
       const orderNumber = `ORD-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(Math.random() * 1000)}`;
       
       const orderTime = new Date();
-      const collectionTime = new Date(orderTime.getTime() + 60 * 60 * 1000); // +1 hour
-
+      const collectionTime = new Date(orderTime.getTime() + 60 * 60 * 1000); 
       const orderData = {
         orderNumber: orderNumber,
         orderID: Math.floor(1000 + Math.random() * 9000),
@@ -327,19 +324,19 @@
       }
 
       try {
-        // 1. Save order to Firestore
+        // Saves Order To Firestore
         await addDoc(collection(db, "Orders"), orderData);
         console.log('Order saved to Firestore');
 
-        // 2. Prepare email items list
+        // Prepares Email Item List
         const itemsList = cartData.items.map(item => 
           `${item.itemname} x${item.quantity} - KES ${(item.price * item.quantity).toFixed(2)}`
         ).join('\n');
 
-        // 3. Send email via EmailJS
+        // 3Sends Email Using EmailJs
         const emailParams = {
           user_name: userData?.fullName || userData?.name || 'Customer',
-          user_email: currentUser.email, // Make sure this matches your EmailJS template variable
+          user_email: currentUser.email, 
           order_number: orderNumber,
           order_items: itemsList,
           order_total: total.toFixed(2),
@@ -356,17 +353,15 @@
         console.log('Sending email with params:', emailParams);
         console.log('Recipient email:', currentUser.email);
 
-        // Send email with explicit recipient
         await emailjs.send(
           'service_yuralkh', 
           'template_3mspdgl', 
           emailParams,
-          '_EAFuYn_2tA8LaBnV' // Your public key
+          '_EAFuYn_2tA8LaBnV' 
         );
         console.log('Email sent successfully');
 
-        // 4. Clear cart
-        await deleteDoc(doc(db, "Cart", currentUser.uid));
+        // Clears Cart After Successful Checkout
         cartData.items = [];
 
         alert(

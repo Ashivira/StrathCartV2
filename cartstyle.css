@@ -17,8 +17,6 @@
       margin: 0 auto;
       padding: 0 1rem;
     }
-
-    /* Navbar */
     .navbar {
       position: sticky;
       top: 0;
@@ -59,8 +57,6 @@
     .nav-links a.active {
       color: #58a4b0;
     }
-
-    /* Cart Container */
     .cart-header {
       padding: 1.5rem;
       background: rgba(255, 255, 255, 0.05);

@@ -21,8 +21,3 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 export { auth, db, storage };
-
-function toggleMenu() {
-  document.querySelector(".nav-links").classList.toggle("mobile-open");
-}
-

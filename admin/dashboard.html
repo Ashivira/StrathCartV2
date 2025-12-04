@@ -250,7 +250,7 @@
       loadRecentOrders();
     };
 
-    // ------------------ MENU ITEMS ------------------
+    // Loading Menu Items From Firestore
     async function loadMenuItems() {
       const menuSnap = await getDocs(collection(db, "Menuitems"));
       const tbody = document.getElementById('menu-items-body');
@@ -320,15 +320,14 @@
       }
     }
 
-    // --- Cloudinary Upload ---
+    // Cloudinary Image Upload
     async function uploadToCloudinary(file) {
       try {
         const url = "https://api.cloudinary.com/v1_1/douictwnx/image/upload";
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", "strathcart"); // unsigned preset
-        formData.append("folder", "menu"); // optional folder
-
+        formData.append("upload_preset", "strathcart"); 
+        formData.append("folder", "menu"); 
         const res = await fetch(url, { method: "POST", body: formData });
         if (!res.ok) throw new Error("Upload failed");
 
@@ -399,7 +398,7 @@
       loadStats();
     };
 
-    // ------------------ CREATE ADMIN ------------------
+    // Create Admin Function
     window.createAdmin = async () => {
       const fullname = document.getElementById('admin-fullname').value.trim();
       const email = document.getElementById('admin-email').value.trim();
@@ -425,7 +424,7 @@
 
     window.logout = () => auth.signOut().then(() => window.location.href = 'adminlogin.html');
 
-    // ------------------ TABS ------------------
+    // Tabs Switching
     window.switchTab = (tabName) => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));

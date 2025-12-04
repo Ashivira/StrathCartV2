@@ -51,7 +51,7 @@ const userEmail = document.getElementById('userEmail');
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    // User is logged in → show profile info
+    // User is logged in, therefore it shows profile info
     profileDetails.style.display = 'block';
     const userData = JSON.parse(sessionStorage.getItem('strathcart_user') || '{}');
     userFullName.innerText = userData.fullName || user.displayName || 'N/A';
@@ -68,7 +68,7 @@ onAuthStateChanged(auth, (user) => {
     };
 
   } else {
-    // User is not logged in → hide profile info, show login button
+    // User is not logged in, hides profile info and instead shows login button
     profileDetails.style.display = 'none';
     accountBtn.innerText = 'Log In';
     accountBtn.onclick = () => {

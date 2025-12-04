@@ -1,9 +1,3 @@
-/* ===================================================================
-   STRATHCART GLOBAL RESPONSIVE STYLES
-   Universal CSS for responsive design across all pages
-   =================================================================== */
-
-/* Base Responsive Foundation */
 * {
   margin: 0;
   padding: 0;
@@ -24,33 +18,22 @@ body {
   color: #E0E1DD;
   overflow-x: hidden;
 }
-
-/* Responsive Images */
 img {
   max-width: 100%;
   height: auto;
   display: block;
 }
-
-/* Responsive Container */
 .container {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
 }
-
-/* Fluid Typography */
 h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); line-height: 1.2; }
 h2 { font-size: clamp(1.5rem, 4vw, 2rem); line-height: 1.3; }
 h3 { font-size: clamp(1.2rem, 3vw, 1.5rem); line-height: 1.4; }
 h4 { font-size: clamp(1rem, 2.5vw, 1.25rem); line-height: 1.4; }
 p { font-size: clamp(0.875rem, 2vw, 1rem); line-height: 1.6; }
-
-/* ===================================================================
-   RESPONSIVE NAVBAR
-   =================================================================== */
-
 .navbar {
   position: sticky;
   top: 0;
@@ -110,8 +93,6 @@ p { font-size: clamp(0.875rem, 2vw, 1rem); line-height: 1.6; }
   color: #58a4b0;
   background: rgba(88, 164, 176, 0.1);
 }
-
-/* Mobile Menu Toggle */
 .mobile-menu-toggle {
   display: none;
   background: none;
@@ -121,19 +102,12 @@ p { font-size: clamp(0.875rem, 2vw, 1rem); line-height: 1.6; }
   cursor: pointer;
   padding: 0.5rem;
 }
-
-/* Mobile Menu */
 .nav-links.mobile-open {
   display: flex;
   flex-direction: column;
   width: 100%;
   order: 3;
 }
-
-/* ===================================================================
-   RESPONSIVE GRIDS
-   =================================================================== */
-
 .menu-list,
 .menu-grid,
 .product-grid {
@@ -157,11 +131,6 @@ p { font-size: clamp(0.875rem, 2vw, 1rem); line-height: 1.6; }
   gap: 2rem;
   align-items: start;
 }
-
-/* ===================================================================
-   RESPONSIVE TABLES
-   =================================================================== */
-
 .table-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -202,7 +171,6 @@ tbody tr:hover {
   background: rgba(255, 255, 255, 0.03);
 }
 
-/* Responsive table on very small screens */
 @media (max-width: 575px) {
   .table-container {
     margin: 0 -1rem;
@@ -217,10 +185,6 @@ tbody tr:hover {
     padding: 0.5rem;
   }
 }
-
-/* ===================================================================
-   RESPONSIVE FORMS
-   =================================================================== */
 
 .form-container {
   width: 100%;
@@ -270,11 +234,6 @@ tbody tr:hover {
   min-height: 100px;
   font-family: inherit;
 }
-
-/* ===================================================================
-   RESPONSIVE BUTTONS
-   =================================================================== */
-
 button,
 .btn,
 .btn-primary,
@@ -336,19 +295,12 @@ button:disabled,
   cursor: not-allowed;
   transform: none !important;
 }
-
-/* Full width buttons on mobile */
 @media (max-width: 575px) {
   .btn-mobile-full {
     width: 100%;
     display: block;
   }
 }
-
-/* ===================================================================
-   RESPONSIVE MODALS
-   =================================================================== */
-
 .modal {
   position: fixed;
   top: 0;
@@ -400,11 +352,6 @@ button:disabled,
 .modal-close:hover {
   color: #58a4b0;
 }
-
-/* ===================================================================
-   RESPONSIVE CARDS
-   =================================================================== */
-
 .card,
 .stat-card,
 .menu-item,
@@ -423,11 +370,6 @@ button:disabled,
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   border-color: rgba(88, 164, 176, 0.3);
 }
-
-/* ===================================================================
-   CART SPECIFIC STYLES
-   =================================================================== */
-
 .cart-container {
   display: grid;
   grid-template-columns: 1fr 350px;
@@ -485,11 +427,6 @@ button:disabled,
   width: 100%;
   margin-top: 1rem;
 }
-
-/* ===================================================================
-   HERO SECTION
-   =================================================================== */
-
 .hero {
   min-height: clamp(300px, 50vh, 500px);
   display: flex;
@@ -515,11 +452,6 @@ button:disabled,
   color: #A8B2C1;
   font-size: clamp(1rem, 2.5vw, 1.2rem);
 }
-
-/* ===================================================================
-   FOOTER
-   =================================================================== */
-
 .home-footer,
 footer {
   text-align: center;
@@ -529,11 +461,6 @@ footer {
   border-radius: 1rem 1rem 0 0;
   color: #A8B2C1;
 }
-
-/* ===================================================================
-   STATUS BADGES
-   =================================================================== */
-
 .status-badge {
   padding: 0.3rem 0.8rem;
   border-radius: 1rem;
@@ -546,11 +473,6 @@ footer {
 .status-preparing { background: #3b82f6; color: white; }
 .status-ready { background: #10b981; color: white; }
 .status-collected { background: #6b7280; color: white; }
-
-/* ===================================================================
-   LOADING STATES
-   =================================================================== */
-
 .loading,
 .loading-state {
   text-align: center;
@@ -572,11 +494,6 @@ footer {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-/* ===================================================================
-   TOAST NOTIFICATIONS
-   =================================================================== */
-
 .toast {
   position: fixed;
   bottom: 2rem;
@@ -607,12 +524,6 @@ footer {
     opacity: 1;
   }
 }
-
-/* ===================================================================
-   MEDIA QUERIES - MOBILE FIRST APPROACH
-   =================================================================== */
-
-/* Extra Small Devices (phones, less than 576px) */
 @media (max-width: 575px) {
   html {
     font-size: 14px;
@@ -621,8 +532,6 @@ footer {
   .container {
     padding: 0 0.75rem;
   }
-
-  /* Hamburger menu */
   .nav-links {
     display: none;
     width: 100%;
@@ -636,7 +545,6 @@ footer {
     display: block;
   }
 
-  /* Single column grids */
   .menu-list,
   .menu-grid,
   .product-grid {
@@ -652,8 +560,6 @@ footer {
   .cart-container {
     grid-template-columns: 1fr;
   }
-
-  /* Cart items mobile layout */
   .cart-item {
     grid-template-columns: 80px 1fr;
     gap: 1rem;
@@ -667,14 +573,11 @@ footer {
   .cart-item-image {
     height: 80px;
   }
-
-  /* Cart summary on mobile */
   .cart-summary {
     position: relative;
     top: auto;
   }
 
-  /* Button groups stack */
   .btn-group {
     display: flex;
     flex-direction: column;
@@ -684,8 +587,6 @@ footer {
   .btn-group button {
     width: 100%;
   }
-
-  /* Modal full screen on mobile */
   .modal {
     padding: 0;
   }
@@ -695,13 +596,11 @@ footer {
     max-height: 100vh;
   }
 
-  /* Reduce gaps */
   .dashboard-cards,
   .menu-list {
     gap: 1rem;
   }
 
-  /* Toast positioning */
   .toast {
     left: 1rem;
     right: 1rem;
@@ -710,7 +609,6 @@ footer {
   }
 }
 
-/* Small Devices (landscape phones, 576px and up) */
 @media (min-width: 576px) and (max-width: 767px) {
   .menu-list,
   .menu-grid {
@@ -725,8 +623,6 @@ footer {
     grid-template-columns: 1fr;
   }
 }
-
-/* Medium Devices (tablets, 768px and up) */
 @media (min-width: 768px) and (max-width: 991px) {
   .nav-links {
     gap: 0.8rem;
@@ -755,8 +651,6 @@ footer {
     grid-template-columns: 90px 1fr auto;
   }
 }
-
-/* Large Devices (desktops, 992px and up) */
 @media (min-width: 992px) and (max-width: 1199px) {
   .menu-list,
   .menu-grid {
@@ -767,8 +661,6 @@ footer {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 }
-
-/* Extra Large Devices (large desktops, 1200px and up) */
 @media (min-width: 1200px) {
   .container {
     max-width: 1400px;
@@ -783,10 +675,6 @@ footer {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 }
-
-/* ===================================================================
-   ORIENTATION-BASED STYLES
-   =================================================================== */
 
 @media (orientation: landscape) and (max-height: 500px) {
   .navbar {
@@ -806,11 +694,6 @@ footer {
     height: 35px;
   }
 }
-
-/* ===================================================================
-   PRINT STYLES
-   =================================================================== */
-
 @media print {
   .navbar,
   .footer,
@@ -839,12 +722,7 @@ footer {
   }
 }
 
-/* ===================================================================
-   TOUCH DEVICE OPTIMIZATIONS
-   =================================================================== */
-
 @media (hover: none) and (pointer: coarse) {
-  /* Increase touch targets */
   button,
   .btn,
   a,
@@ -852,24 +730,17 @@ footer {
   select {
     min-height: 44px;
   }
-
-  /* Remove hover effects */
   .card:hover,
   .menu-item:hover {
     transform: none;
   }
 
-  /* Larger tap areas for small buttons */
+
   .btn-small {
     min-height: 40px;
     padding: 0.5rem 1rem;
   }
 }
-
-/* ===================================================================
-   ACCESSIBILITY - REDUCED MOTION
-   =================================================================== */
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -885,11 +756,6 @@ footer {
     border: 3px solid #58a4b0;
   }
 }
-
-/* ===================================================================
-   HIGH CONTRAST MODE
-   =================================================================== */
-
 @media (prefers-contrast: high) {
   * {
     border-color: currentColor !important;
@@ -904,21 +770,12 @@ footer {
     border: 2px solid currentColor;
   }
 }
-
-/* ===================================================================
-   DARK MODE SUPPORT (if user prefers dark)
-   =================================================================== */
-
 @media (prefers-color-scheme: dark) {
   body {
     background: #0D1B2A;
     color: #E0E1DD;
   }
 }
-
-/* ===================================================================
-   UTILITY CLASSES
-   =================================================================== */
 
 /* Visibility */
 .hide-mobile { display: none; }
@@ -956,7 +813,6 @@ footer {
 .p-1 { padding: 1rem; }
 .p-2 { padding: 2rem; }
 
-/* Text alignment */
 .text-center { text-align: center; }
 .text-left { text-align: left; }
 .text-right { text-align: right; }
@@ -965,18 +821,11 @@ footer {
   .text-center-mobile { text-align: center; }
 }
 
-/* Width utilities */
 .w-full { width: 100%; }
 .w-auto { width: auto; }
-
-/* Display utilities */
 .block { display: block; }
 .inline-block { display: inline-block; }
 .hidden { display: none; }
-
-/* ===================================================================
-   SAFE AREA SUPPORT (iOS notch)
-   =================================================================== */
 
 @supports (padding: max(0px)) {
   body {
@@ -995,11 +844,6 @@ footer {
     padding-right: max(1.5rem, env(safe-area-inset-right));
   }
 }
-
-/* ===================================================================
-   SCROLLBAR STYLING
-   =================================================================== */
-
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -1018,7 +862,6 @@ footer {
   background: rgba(88, 164, 176, 0.7);
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(88, 164, 176, 0.5) rgba(255, 255, 255, 0.05);
