@@ -333,7 +333,7 @@
           `${item.itemname} x${item.quantity} - KES ${(item.price * item.quantity).toFixed(2)}`
         ).join('\n');
 
-        // 3Sends Email Using EmailJs
+        // Sends Email Using EmailJs
         const emailParams = {
           user_name: userData?.fullName || userData?.name || 'Customer',
           user_email: currentUser.email, 
@@ -363,6 +363,7 @@
 
         // Clears Cart After Successful Checkout
         cartData.items = [];
+        await saveCart();
 
         alert(
           `Order placed successfully!\n\n` +
